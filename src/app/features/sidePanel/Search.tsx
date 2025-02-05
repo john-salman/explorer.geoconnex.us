@@ -1,0 +1,99 @@
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
+
+import debounce from 'lodash.debounce';
+import { FeatureCollection, Geometry } from 'geojson';
+import { AppDispatch } from '@/lib/state/store';
+import { fetchDatasets, setDatasets, setHoverId, setSearchResultIds, setSelectedMainstemId } from '@/lib/state/main/slice';
+import { defaultGeoJson } from '@/lib/state/utils';
+import { MainstemData } from '@/app/types';
+
+// Extract the properties of each feature
+
+const SearchComponent: React.FC = () => {
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState<MainstemData[]>([]);
+
+    const dispatch: AppDispatch = useDispatch();
+
+    const search = async (query: string) => {
+        const _query = query.toLowerCase();
+
+        if (_query) {
+            // Move this to thunk
+            const response = await fetch(
+                `https://reference.geoconnex.us/collections/mainstems/items?filter=name_at_outlet+ILIKE+'%${query}%'+OR+uri+ILIKE+'%mainstems/${query}%'&f=json&skipGeometry=true`
+            );
+            const data: FeatureCollection<Geometry, MainstemData> = await response.json();
+            const searchResults: MainstemData[] = data.features.map((feature) => ({
+                ...feature.properties,
+                id: feature.id,
+            } as MainstemData));
+            console.log('results', searchResults);
+            setResults(searchResults);
+        } else {
+            setResults([]);
+            dispatch(setDatasets(defaultGeoJson));
+        }
+    };
+
+    const debouncedSearch = useCallback(
+        debounce(async (query: string) => search(query), 300),
+        []
+    );
+
+    useEffect(() => {
+        return function cleanup() {
+            debouncedSearch.cancel();
+        };
+    }, []);
+
+    useEffect(() => {
+        debouncedSearch(query);
+    }, [query]);
+
+    useEffect(() => {
+        const ids = results.map((result) => result.id);
+        dispatch(setSearchResultIds(ids));
+    }, [results]);
+
+    const handleClick = (id: number) => {
+        console.log('Id: ', id, typeof id);
+
+        dispatch(fetchDatasets(id));
+        dispatch(setSelectedMainstemId(id));
+    };
+
+    return (
+        <div
+            className="mb-5 mt-5 mr-5 h-30% max-h-[35vh] overflow-auto border border-gray-500 p-2.5"
+            onMouseLeave={() => dispatch(setHoverId(null))}
+        >
+            <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search..."
+                className="border p-2 rounded w-[95%]"
+            />
+            <ul>
+                {results.map((result, index) => (
+                    <li
+                        key={index}
+                        className="p-2 border-b"
+                        onClick={() => handleClick(Number(result.id))}
+                        onMouseOver={() => dispatch(setHoverId(result.id))}
+                    >
+                        <strong>{result.name_at_outlet}</strong> - {result.uri}
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+export default SearchComponent;
+function setSelectedId(id: number): any {
+    throw new Error('Function not implemented.');
+}
+
