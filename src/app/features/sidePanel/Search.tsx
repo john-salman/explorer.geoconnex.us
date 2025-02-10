@@ -14,8 +14,6 @@ import {
 import { defaultGeoJson } from '@/lib/state/utils';
 import { Dataset, MainstemData } from '@/app/types';
 
-// Extract the properties of each feature
-
 const SearchComponent: React.FC = () => {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<MainstemData[]>([]);
@@ -90,11 +88,12 @@ const SearchComponent: React.FC = () => {
                 {results.map((result, index) => (
                     <li
                         key={index}
-                        className="p-2 border-b"
+                        className="p-2 border-b truncate"
                         onClick={() => handleClick(Number(result.id))}
                         onMouseOver={() =>
                             dispatch(setHoverId(Number(result.id)))
                         }
+                        title={`${result.name_at_outlet} - ${result.uri}`}
                     >
                         <strong>{result.name_at_outlet}</strong> - {result.uri}
                     </li>

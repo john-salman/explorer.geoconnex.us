@@ -629,10 +629,9 @@ export const getLayerClickFunction = (
 // meaning they have their own click and hover listeners
 export const layerDefinitions: MainLayerDefinition[] = [
     {
-        id: LayerId.SpiderifyPoints,
-        controllable: false,
-        config: getLayerConfig(LayerId.SpiderifyPoints),
-        hoverFunction: getLayerHoverFunction(LayerId.SpiderifyPoints),
+        id: LayerId.MajorRivers,
+        controllable: true,
+        config: getLayerConfig(LayerId.MajorRivers),
     },
     {
         id: LayerId.Mainstems,
@@ -682,11 +681,6 @@ export const layerDefinitions: MainLayerDefinition[] = [
         ],
     },
     {
-        id: LayerId.MajorRivers,
-        controllable: true,
-        config: getLayerConfig(LayerId.MajorRivers),
-    },
-    {
         id: LayerId.AssociatedData,
         controllable: false,
         config: getLayerConfig(LayerId.AssociatedData),
@@ -719,6 +713,12 @@ export const layerDefinitions: MainLayerDefinition[] = [
                 // ),
             },
         ],
+    },
+    {
+        id: LayerId.SpiderifyPoints,
+        controllable: false,
+        config: getLayerConfig(LayerId.SpiderifyPoints),
+        hoverFunction: getLayerHoverFunction(LayerId.SpiderifyPoints),
     },
 
     // {
