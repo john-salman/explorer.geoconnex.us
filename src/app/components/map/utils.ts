@@ -1,5 +1,17 @@
-import { Map, SourceSpecification, Popup } from 'mapbox-gl';
-import { MainLayerDefinition, SourceConfig, Sources } from './types';
+import {
+    Map,
+    SourceSpecification,
+    Popup,
+    ScaleControl,
+    NavigationControl,
+    FullscreenControl,
+} from 'mapbox-gl';
+import {
+    MainLayerDefinition,
+    MapComponentProps,
+    SourceConfig,
+    Sources,
+} from '@/app/components/Map/types';
 import FeatureService, {
     FeatureServiceOptions,
 } from '@hansdo/mapbox-gl-arcgis-featureserver';
@@ -8,20 +20,31 @@ export const addSources = (map: Map, sourceConfigs: SourceConfig[]) => {
     sourceConfigs.forEach((sourceConfig) => {
         switch (sourceConfig.type) {
             case Sources.ESRI:
-                new FeatureService(
-                    sourceConfig.id,
-                    map,
-                    sourceConfig.definition as FeatureServiceOptions
-                );
+                if (!map.getSource(sourceConfig.id)) {
+                    new FeatureService(
+                        sourceConfig.id,
+                        map,
+                        sourceConfig.definition as FeatureServiceOptions
+                    );
+                }
                 break;
 
-            case Sources.GeoJSON:
             case Sources.VectorTile:
+                if (!map.getSource(sourceConfig.id)) {
+                    map.addSource(
+                        sourceConfig.id,
+                        sourceConfig.definition as SourceSpecification
+                    );
+                }
+                break;
+            case Sources.GeoJSON:
             default:
-                map.addSource(
-                    sourceConfig.id,
-                    sourceConfig.definition as SourceSpecification
-                );
+                if (!map.getSource(sourceConfig.id)) {
+                    map.addSource(
+                        sourceConfig.id,
+                        sourceConfig.definition as SourceSpecification
+                    );
+                }
                 break;
         }
     });
@@ -32,12 +55,12 @@ export const addLayers = (
     layerDefinitions: MainLayerDefinition[]
 ) => {
     layerDefinitions.forEach((layer) => {
-        if (layer.config) {
+        if (layer.config && !map.getLayer(layer.id)) {
             map.addLayer(layer.config);
         }
         if ((layer?.subLayers ?? []).length > 0) {
             layer.subLayers!.forEach((subLayer) => {
-                if (subLayer.config) {
+                if (subLayer.config && !map.getLayer(subLayer.id)) {
                     map.addLayer(subLayer.config);
                 }
             });
@@ -131,6 +154,33 @@ export const addClickFunctions = (
             });
         }
     });
+};
+
+export const addControls = (
+    map: Map,
+    controls: MapComponentProps['controls']
+) => {
+    if (controls) {
+        const { scaleControl, navigationControl, fullscreenControl } = controls;
+        if (scaleControl) {
+            const scaleControlOptions =
+                typeof scaleControl === 'boolean' ? {} : scaleControl;
+            map.addControl(new ScaleControl(scaleControlOptions));
+        }
+        if (navigationControl) {
+            const navigationControlOptions =
+                typeof navigationControl === 'boolean' ? {} : navigationControl;
+            map.addControl(
+                new NavigationControl(navigationControlOptions),
+                'bottom-right' // TODO: add ability to position
+            );
+        }
+        if (fullscreenControl) {
+            const fullscreenControlOptions =
+                typeof fullscreenControl === 'boolean' ? {} : fullscreenControl;
+            map.addControl(new FullscreenControl(fullscreenControlOptions));
+        }
+    }
 };
 
 // I dont think an approach like this will be necessary

@@ -4,7 +4,7 @@ import CloseButton from './CloseButton';
 type Props = {
     children: React.ReactNode;
     handleClose?: () => void;
-    className?: string
+    className?: string;
 };
 
 const Card: React.FC<Props> = (props) => {
@@ -12,7 +12,7 @@ const Card: React.FC<Props> = (props) => {
 
     return (
         <div className={`flex items-center text-black ${className}`}>
-            <div className="relative bg-white rounded-lg shadow-lg p-6 w-96">
+            <div className="relative bg-white rounded-lg shadow-lg p-6 w-[100%]">
                 {handleClose && (
                     <span className="absolute top-2 right-2">
                         <CloseButton handleClick={handleClose} />

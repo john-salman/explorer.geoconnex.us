@@ -1,17 +1,17 @@
-import { useCallback } from "react";
-import { LayerDefinition, MainLayerDefinition } from "../types";
-
+import { useCallback } from 'react';
+import { MainLayerDefinition } from '@/app/components/Map/types';
 
 type Props = {
     handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     getLayerName: (id: string) => string;
     getLayerColor: (id: string) => string;
-    visibleLayers: {[key in string]: boolean};
+    visibleLayers: { [key in string]: boolean };
     layerDefinitions: MainLayerDefinition[];
 };
 
 export const Toggles: React.FC<Props> = (props) => {
-    const { visibleLayers, layerDefinitions, getLayerName, getLayerColor, handleChange } = props;
+    const { visibleLayers, layerDefinitions, getLayerName, handleChange } =
+        props;
 
     const renderToggles = useCallback(() => {
         return layerDefinitions
@@ -41,7 +41,8 @@ export const Toggles: React.FC<Props> = (props) => {
                             )} */}
                     </div>
 
-                    {layer.subLayers && layer.subLayers.length > 0 &&
+                    {layer.subLayers &&
+                        layer.subLayers.length > 0 &&
                         layer.subLayers.map((sublayer) => (
                             <div
                                 key={`layer-control-${layer.id}-${sublayer.id}`}

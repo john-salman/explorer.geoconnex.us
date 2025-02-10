@@ -1,10 +1,10 @@
 import { Dataset } from '@/app/types';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { FeatureCollection, Geometry } from 'geojson';
+import { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
 import { GeoJSONFeature } from 'mapbox-gl';
 import parse from 'wellknown';
 
-export const defaultGeoJson: FeatureCollection = {
+export const defaultGeoJson: FeatureCollection<Geometry, GeoJsonProperties> = {
     type: 'FeatureCollection',
     features: [],
 };

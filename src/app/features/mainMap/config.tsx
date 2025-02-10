@@ -1,28 +1,37 @@
 import {
+    BasemapId,
     CustomListenerFunction,
     MainLayerDefinition,
     SourceConfig,
     Sources,
-} from '@/app/components/map/types';
+} from '@/app/components/Map/types';
 import { Point } from 'geojson';
 import {
     DataDrivenPropertyValueSpecification,
     GeoJSONSource,
     LayerSpecification,
-    LngLatLike,
+    LngLat,
     Map,
     Popup,
 } from 'mapbox-gl';
 import { defaultGeoJson } from '@/lib/state/utils';
 import { majorRivers } from '@/app/data/majorRivers';
+import {
+    hasPeristentPopupOpenToThisItem,
+    spiderfyCluster,
+} from '@/app/features/MainMap/utils';
+import { basemaps } from '@/app/components/Map/consts';
 
 export const MAP_ID = 'main';
+
+export const BASEMAP = basemaps[BasemapId.Dark];
 
 export enum SourceId {
     Mainstems = 'mainstems',
     MajorRivers = 'major-rivers-source',
     HUC2Boundaries = 'huc-2-boundaries-source',
     AssociatedData = 'associated-data-source',
+    Spiderify = 'spiderify',
 }
 
 export enum LayerId {
@@ -30,6 +39,7 @@ export enum LayerId {
     HUC2Boundaries = 'huc-2-boundaries',
     MajorRivers = 'major-rivers',
     AssociatedData = 'associated-data',
+    SpiderifyPoints = 'spiferified-clusters',
 }
 
 export enum SubLayerId {
@@ -37,10 +47,15 @@ export enum SubLayerId {
     MainstemsMedium = 'mainstems-medium',
     MainstemsLarge = 'mainstems-large',
     HUC2BoundaryLabels = 'huc-2-boundaries-labels',
+    HUC2BoundaryFill = 'huc-2-boundaries-Fill',
     AssociatedDataClusters = 'associated-data-clusters',
     AssociatedDataClusterCount = 'associated-data-cluster-count',
     AssociatedDataUnclustered = 'associated-data-unclustered-point',
 }
+export const allLayerIds = [
+    ...Object.values(LayerId),
+    ...Object.values(SubLayerId),
+];
 
 /**********************************************************************
  * Define the various datasources this map will use
@@ -52,11 +67,13 @@ export const sourceConfigs: SourceConfig[] = [
         definition: {
             type: 'vector',
             tiles: [
-                'https://reference.geoconnex.us/collections/mainstems/tiles/WebMercatorQuad/{z}/{x}/{y}?f=mvt',
+                `https://reference.geoconnex.us/collections/mainstems/tiles/WebMercatorQuad/{z}/{x}/{y}?f=mvt`,
             ],
             minzoom: 0,
-            maxzoom: 13,
+
+            maxzoom: 10,
             tileSize: 512,
+            bounds: [-124.707777, 25.190876, -67.05824, 49.376613],
         },
     },
     {
@@ -74,7 +91,7 @@ export const sourceConfigs: SourceConfig[] = [
             type: 'geojson',
             data: defaultGeoJson,
             cluster: true,
-            clusterMaxZoom: 14, // Max zoom to cluster points on
+            clusterMaxZoom: 20, // Max zoom to cluster points on
             clusterRadius: 50,
         },
     },
@@ -84,6 +101,18 @@ export const sourceConfigs: SourceConfig[] = [
         definition: {
             url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/Watershed_Boundary_Dataset_HUC_2s/FeatureServer/0',
             simplifyFactor: 1,
+        },
+    },
+    {
+        id: SourceId.Spiderify,
+        type: Sources.GeoJSON,
+        definition: {
+            type: 'geojson',
+            data: {
+                type: 'FeatureCollection',
+                features: [],
+            },
+            cluster: false,
         },
     },
 ];
@@ -123,17 +152,15 @@ export const getLayerColor = (
         case LayerId.Mainstems:
             return '#7A9939';
         case SubLayerId.MainstemsSmall:
-            return '#31575E';
+            return '#00A087';
         case SubLayerId.MainstemsMedium:
-            return '#898030';
+            return '#E6000B';
         case SubLayerId.MainstemsLarge:
-            return '#DE0462';
+            return '#1B335F';
         case LayerId.MajorRivers:
-            return '#7A9939';
+            return '#536663';
         case LayerId.HUC2Boundaries:
-            return 'green';
-        case SubLayerId.HUC2BoundaryLabels:
-            return 'green';
+            return '#4798E6';
         case LayerId.AssociatedData:
             return ''; // Special case, no parent layer def
         case SubLayerId.AssociatedDataClusters:
@@ -150,6 +177,10 @@ export const getLayerColor = (
             return '#000';
         case SubLayerId.AssociatedDataUnclustered:
             return '#11b4da';
+        case LayerId.SpiderifyPoints:
+            return '#46AB9D';
+        default:
+            return '#FFF';
     }
 };
 
@@ -165,11 +196,11 @@ export const getLayerConfig = (
                 id: SubLayerId.MainstemsSmall, // Layer ID
                 type: 'line',
                 source: SourceId.Mainstems,
-                "source-layer": SourceId.Mainstems,
+                'source-layer': SourceId.Mainstems,
                 layout: {
                     'line-cap': 'round',
                     'line-join': 'round',
-                    'visibility': 'visible',
+                    visibility: 'none',
                 },
                 filter: ['<', ['get', 'outlet_drainagearea_sqkm'], 160],
                 paint: {
@@ -189,10 +220,11 @@ export const getLayerConfig = (
                 id: SubLayerId.MainstemsMedium, // Layer ID
                 type: 'line',
                 source: SourceId.Mainstems,
-                "source-layer": SourceId.Mainstems,
+                'source-layer': SourceId.Mainstems,
                 layout: {
                     'line-cap': 'round',
                     'line-join': 'round',
+                    visibility: 'none',
                 },
                 filter: [
                     'all',
@@ -216,10 +248,11 @@ export const getLayerConfig = (
                 id: SubLayerId.MainstemsLarge, // Layer ID
                 type: 'line',
                 source: SourceId.Mainstems,
-                "source-layer": SourceId.Mainstems,
+                'source-layer': SourceId.Mainstems,
                 layout: {
                     'line-cap': 'round',
                     'line-join': 'round',
+                    visibility: 'none',
                 },
                 filter: ['>', ['get', 'outlet_drainagearea_sqkm'], 1600],
                 paint: {
@@ -273,7 +306,7 @@ export const getLayerConfig = (
                         7,
                         0.1, // Default to 0.1
                     ],
-                    'line-color': 'green',
+                    'line-color': getLayerColor(LayerId.HUC2Boundaries),
                     'line-width': 2,
                 },
             };
@@ -290,8 +323,19 @@ export const getLayerConfig = (
                     'text-justify': 'auto',
                 },
                 paint: {
-                    'text-color': getLayerColor(SubLayerId.HUC2BoundaryLabels),
+                    'text-color': getLayerColor(LayerId.HUC2Boundaries),
                     'text-opacity': ['step', ['zoom'], 1, 6, 0],
+                },
+            };
+        // Utility layer to allow clicking on shape
+        case SubLayerId.HUC2BoundaryFill:
+            return {
+                id: SubLayerId.HUC2BoundaryFill,
+                type: 'fill',
+                source: SourceId.HUC2Boundaries,
+                paint: {
+                    'fill-color': '#000',
+                    'fill-opacity': 0,
                 },
             };
         case LayerId.AssociatedData:
@@ -357,8 +401,38 @@ export const getLayerConfig = (
                     'circle-stroke-color': '#fff',
                 },
             };
+        case LayerId.SpiderifyPoints:
+            return {
+                id: LayerId.SpiderifyPoints,
+                type: 'symbol',
+                source: SourceId.Spiderify,
+                filter: ['!', ['has', 'point_count']],
+                paint: {
+                    'icon-color': getLayerColor(LayerId.SpiderifyPoints),
+                    'icon-opacity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        14,
+                        0, // Set opacity to 0 at zoom level 14
+                        14.01,
+                        ['get', 'isNotFiltered'], // Use the data property for zoom levels over 13
+                    ],
+                },
+                layout: {
+                    'icon-image': 'observation-point',
+                    'icon-size': 0.2,
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true,
+                    'icon-offset': ['get', 'iconOffset'],
+                },
+            };
+        default:
+            return null;
     }
 };
+
+let hoverOnCluster = false;
 
 // Define and hover functions with curry-ed map and popup objects
 export const getLayerHoverFunction = (
@@ -368,64 +442,88 @@ export const getLayerHoverFunction = (
         switch (id) {
             case SubLayerId.MainstemsSmall:
                 return (e) => {
-                    map.getCanvas().style.cursor = 'pointer';
+                    if (!hoverOnCluster) {
+                        map.getCanvas().style.cursor = 'pointer';
 
-                    const feature = e.features?.[0];
-                    if (feature && feature.properties) {
-
-                        const html = `<strong style="color:black;">${feature.properties.name_at_outlet}</strong>`;
-                        hoverPopup
-                            .setLngLat(e.lngLat)
-                            .setHTML(html)
-                            .addTo(map);
+                        const feature = e.features?.[0];
+                        if (feature && feature.properties) {
+                            const html = `<strong style="color:black;">${feature.properties.name_at_outlet}</strong>`;
+                            hoverPopup
+                                .setLngLat(e.lngLat)
+                                .setHTML(html)
+                                .addTo(map);
+                        }
                     }
                 };
             case SubLayerId.MainstemsMedium:
                 return (e) => {
-                    map.getCanvas().style.cursor = 'pointer';
+                    if (!hoverOnCluster) {
+                        map.getCanvas().style.cursor = 'pointer';
 
-                    const feature = e.features?.[0];
-                    if (feature && feature.properties) {
-                        const html = `<strong style="color:black;">${feature.properties.name_at_outlet}</strong>`;
+                        const feature = e.features?.[0];
+                        if (feature && feature.properties) {
+                            const html = `<strong style="color:black;">${feature.properties.name_at_outlet}</strong>`;
 
-                        hoverPopup
-                            .setLngLat(e.lngLat)
-                            .setHTML(html)
-                            .addTo(map);
+                            hoverPopup
+                                .setLngLat(e.lngLat)
+                                .setHTML(html)
+                                .addTo(map);
+                        }
                     }
                 };
             case SubLayerId.MainstemsLarge:
                 return (e) => {
-                    map.getCanvas().style.cursor = 'pointer';
+                    if (!hoverOnCluster) {
+                        map.getCanvas().style.cursor = 'pointer';
 
-                    const feature = e.features?.[0];
-                    if (feature && feature.properties) {
-                        const html = `<strong style="color:black;">${feature.properties.name_at_outlet}</strong>`;
+                        const feature = e.features?.[0];
+                        if (feature && feature.properties) {
+                            const html = `<strong style="color:black;">${feature.properties.name_at_outlet}</strong>`;
 
-                        hoverPopup
-                            .setLngLat(e.lngLat)
-                            .setHTML(html)
-                            .addTo(map);
+                            hoverPopup
+                                .setLngLat(e.lngLat)
+                                .setHTML(html)
+                                .addTo(map);
+                        }
                     }
                 };
-            case SubLayerId.AssociatedDataUnclustered:
+
+            case LayerId.SpiderifyPoints:
                 return (e) => {
-                    console.log('EEEE', e)
                     map.getCanvas().style.cursor = 'pointer';
 
                     const feature = e.features?.[0];
                     if (feature && feature.properties) {
-                        const coordinates = (feature.geometry as Point)
-                            .coordinates;
-                        const html = `<span style="color: black;"> 
-                            <h6 style="font-weight:bold;">${feature.properties.siteName}</h6>
-                            <div style="display:flex;"><strong>Type:</strong>&nbsp;<p>${feature.properties.type}</p></div>
-                          </span>`;
-                        hoverPopup
-                            .setLngLat(coordinates as LngLatLike)
-                            .setHTML(html)
-                            .addTo(map);
+                        const itemId = feature.properties.url;
+                        if (
+                            !hasPeristentPopupOpenToThisItem(
+                                persistentPopup,
+                                itemId
+                            )
+                        ) {
+                            const variableMeasured =
+                                feature.properties.variableMeasured.split(
+                                    ' / '
+                                )[0];
+                            const html = `<span style="color: black;"> 
+                                <h6 style="font-weight:bold;">${feature.properties.siteName}</h6>
+                                <div style="display:flex;"><strong>Type:</strong>&nbsp;<p>${variableMeasured} in ${feature.properties.variableUnit}</p></div>
+                              </span>`;
+                            hoverPopup
+                                .setLngLat(e.lngLat)
+                                .setHTML(html)
+                                .addTo(map);
+                        }
                     }
+                };
+            case SubLayerId.AssociatedDataClusters:
+                return () => {
+                    hoverOnCluster = true;
+                    map.getCanvas().style.cursor = 'pointer';
+                };
+            case SubLayerId.HUC2BoundaryFill:
+                return () => {
+                    map.getCanvas().style.cursor = 'pointer';
                 };
             default:
                 return (e) => {
@@ -441,6 +539,28 @@ export const getLayerHoverFunction = (
     };
 };
 
+export const getLayerCustomHoverExitFunction = (
+    id: LayerId | SubLayerId
+): CustomListenerFunction => {
+    return (map: Map, hoverPopup: Popup, persistentPopup: Popup) => {
+        switch (id) {
+            case SubLayerId.AssociatedDataClusters:
+                return () => {
+                    hoverOnCluster = false;
+                };
+            default:
+                return (e) => {
+                    console.log('Hover Exit Event Triggered: ', e);
+                    console.log('The map: ', map);
+                    console.log('Available Popups: ');
+                    console.log('Hover: ', hoverPopup);
+                    console.log('Persistent: ', persistentPopup);
+
+                    map.getCanvas().style.cursor = 'pointer';
+                };
+        }
+    };
+};
 // Click handlers
 export const getLayerClickFunction = (
     id: LayerId | SubLayerId
@@ -452,26 +572,45 @@ export const getLayerClickFunction = (
                     const features = map.queryRenderedFeatures(e.point, {
                         layers: [SubLayerId.AssociatedDataClusters],
                     });
-                    console.log('e', e, features)
+
                     const feature = features?.[0];
                     if (feature && feature.properties) {
                         const clusterId = feature.properties.cluster_id;
-                        (
-                            map.getSource(
-                                SourceId.AssociatedData
-                            ) as GeoJSONSource
-                        )?.getClusterExpansionZoom(clusterId, (err, zoom) => {
-                            if (err) return;
-                            // TODO: clean this up
-                            const coordinates = (feature.geometry as Point)
-                                .coordinates as LngLatLike;
-                            if (zoom) {
-                                map.easeTo({
-                                    center: coordinates,
-                                    zoom: zoom,
-                                });
+                        const source = map.getSource(
+                            SourceId.AssociatedData
+                        ) as GeoJSONSource;
+                        if (!clusterId || !source) {
+                            return;
+                        }
+
+                        source?.getClusterExpansionZoom(
+                            clusterId,
+                            (err, zoom) => {
+                                if (err) return;
+                                const coordinates = (feature.geometry as Point)
+                                    .coordinates as [number, number];
+                                const lngLat = {
+                                    lng: coordinates[0],
+                                    lat: coordinates[1],
+                                } as LngLat;
+
+                                if (zoom) {
+                                    if (zoom > 14) {
+                                        console.log('spiderify');
+                                        spiderfyCluster(
+                                            map,
+                                            source,
+                                            clusterId,
+                                            lngLat
+                                        );
+                                    }
+                                    map.easeTo({
+                                        center: coordinates,
+                                        zoom: zoom,
+                                    });
+                                }
                             }
-                        });
+                        );
                     }
                 };
             default:
@@ -489,6 +628,12 @@ export const getLayerClickFunction = (
 // Use this as the master object to define layer hierarchies. Sublayers are nested layer definitions,
 // meaning they have their own click and hover listeners
 export const layerDefinitions: MainLayerDefinition[] = [
+    {
+        id: LayerId.SpiderifyPoints,
+        controllable: false,
+        config: getLayerConfig(LayerId.SpiderifyPoints),
+        hoverFunction: getLayerHoverFunction(LayerId.SpiderifyPoints),
+    },
     {
         id: LayerId.Mainstems,
         controllable: true,
@@ -526,6 +671,14 @@ export const layerDefinitions: MainLayerDefinition[] = [
                 controllable: true,
                 config: getLayerConfig(SubLayerId.HUC2BoundaryLabels),
             },
+            {
+                id: SubLayerId.HUC2BoundaryFill,
+                controllable: false,
+                config: getLayerConfig(SubLayerId.HUC2BoundaryFill),
+                hoverFunction: getLayerHoverFunction(
+                    SubLayerId.HUC2BoundaryFill
+                ),
+            },
         ],
     },
     {
@@ -545,6 +698,12 @@ export const layerDefinitions: MainLayerDefinition[] = [
                 clickFunction: getLayerClickFunction(
                     SubLayerId.AssociatedDataClusters
                 ),
+                hoverFunction: getLayerHoverFunction(
+                    SubLayerId.AssociatedDataClusters
+                ),
+                customHoverExitFunction: getLayerCustomHoverExitFunction(
+                    SubLayerId.AssociatedDataClusters
+                ),
             },
             {
                 id: SubLayerId.AssociatedDataClusterCount,
@@ -555,12 +714,13 @@ export const layerDefinitions: MainLayerDefinition[] = [
                 id: SubLayerId.AssociatedDataUnclustered,
                 controllable: false,
                 config: getLayerConfig(SubLayerId.AssociatedDataUnclustered),
-                hoverFunction: getLayerHoverFunction(
-                    SubLayerId.AssociatedDataUnclustered
-                ),
+                // hoverFunction: getLayerHoverFunction(
+                //     SubLayerId.AssociatedDataUnclustered
+                // ),
             },
         ],
     },
+
     // {
     //     id: LayerId.Points,
     //     controllable: true,

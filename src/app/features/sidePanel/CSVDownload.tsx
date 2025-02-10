@@ -1,19 +1,19 @@
-import Button from "@/app/components/common/Button"
-import { convertGeoJSONToCSV } from "@/app/utils/csv"
-import { RootState } from "@/lib/state/store";
-import { useSelector } from "react-redux";
+import Button from '@/app/components/common/Button';
+import { convertGeoJSONToCSV } from '@/app/utils/csv';
+import { RootState } from '@/lib/state/store';
+import { useSelector } from 'react-redux';
 
 export const CSVDownload: React.FC = () => {
-    const {
-        filteredDatasets,
-    } = useSelector((state: RootState) => state.main);
+    const { filteredDatasets } = useSelector((state: RootState) => state.main);
 
     return (
         <>
             {filteredDatasets.features.length > 0 && (
                 <div id="csvButton">
                     <Button
-                        handleClick={() => convertGeoJSONToCSV(filteredDatasets)}
+                        handleClick={() =>
+                            convertGeoJSONToCSV(filteredDatasets)
+                        }
                     >
                         <i className="fas fa-download mr-2"></i>
                         <span>Download CSV</span>
@@ -21,5 +21,5 @@ export const CSVDownload: React.FC = () => {
                 </div>
             )}
         </>
-    )
-}
+    );
+};

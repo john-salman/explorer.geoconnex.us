@@ -3,18 +3,19 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useMap } from '@/app/contexts/MapContexts';
-import { MapComponentProps } from './types';
+import { MapComponentProps } from '@/app/components/Map/types';
 import {
     addClickFunctions,
+    addControls,
     addHoverFunctions,
     addLayers,
     addSources,
-} from './utils';
+} from '@/app/components/Map/utils';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 const MapComponent: React.FC<MapComponentProps> = (props) => {
-    const { id, sources, layers, options, accessToken } = props;
+    const { id, sources, layers, options, controls, accessToken } = props;
 
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const { map, setMap } = useMap(id);
@@ -36,6 +37,15 @@ const MapComponent: React.FC<MapComponentProps> = (props) => {
 
             newMap.on('load', () => {
                 setMap(newMap, hoverPopup, persistentPopup);
+                addSources(newMap, sources);
+                addLayers(newMap, layers);
+                addHoverFunctions(newMap, layers, hoverPopup, persistentPopup);
+                addClickFunctions(newMap, layers, hoverPopup, persistentPopup);
+                addControls(newMap, controls);
+            });
+
+            newMap.on('style.load', () => {
+                // Layers reset on style changes
                 addSources(newMap, sources);
                 addLayers(newMap, layers);
                 addHoverFunctions(newMap, layers, hoverPopup, persistentPopup);

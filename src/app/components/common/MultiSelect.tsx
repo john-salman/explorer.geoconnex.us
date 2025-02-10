@@ -12,7 +12,7 @@ const MultiSelect: React.FC<Props> = (props) => {
     const [showOptions, setShowOptions] = useState(false);
 
     return (
-        <div className="w-64 mt-1 mb-1 text-black">
+        <div className="w-64 max-w-[19vw] mt-1 mb-1 text-black">
             <div className="relative">
                 <button
                     className="w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -21,7 +21,7 @@ const MultiSelect: React.FC<Props> = (props) => {
                     aria-labelledby="listbox-label"
                     onClick={() => setShowOptions(!showOptions)}
                 >
-                    Select...
+                    {showOptions ? 'Click to Close' : 'Select...'}
                 </button>
                 <div
                     className={`mt-1 w-full rounded-md bg-white shadow-lg ${
@@ -50,11 +50,16 @@ const MultiSelect: React.FC<Props> = (props) => {
                                 <div className="flex items-center">
                                     <input
                                         type="checkbox"
-                                        checked={selectedOptions?.includes(type)}
+                                        checked={selectedOptions?.includes(
+                                            type
+                                        )}
                                         onChange={() => handleOptionClick(type)}
                                         className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                     />
-                                    <span className="ml-3 block truncate">
+                                    <span
+                                        title={type}
+                                        className="ml-3 block truncate"
+                                    >
                                         {type}
                                     </span>
                                 </div>

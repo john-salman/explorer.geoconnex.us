@@ -29,6 +29,29 @@ div#sidePanel {
     z-index: 1;
 }
 
-div#views {
+div#scrollable-sidepanel {
+    height: calc(100vh - 116px);
+    max-height: calc(100vh - 116px);
+    overflow-y: auto;
+}
+
+div#tools {
     z-index: 1;
+}
+
+#date-range-columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 600px) {
+    #date-range-columns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.mapboxgl-popup-close-button {
+    font-size: x-large;
+    right: 3px;
 }

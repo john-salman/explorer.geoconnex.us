@@ -11,6 +11,9 @@ import {
     MapMouseEvent,
     Map,
     Popup,
+    NavigationControlOptions,
+    ScaleControlOptions,
+    FullscreenControlOptions,
 } from 'mapbox-gl';
 
 export type SourceDefinition =
@@ -19,7 +22,6 @@ export type SourceDefinition =
     | RasterSource<'raster'>
     | ImageSource
     | VideoSource;
-    
 
 export enum Sources {
     GeoJSON = 'geojson',
@@ -58,4 +60,38 @@ export interface MapComponentProps {
     sources: SourceConfig[];
     layers: MainLayerDefinition[];
     options: Omit<MapOptions, 'container'>;
+    controls?: {
+        navigationControl?: NavigationControlOptions | boolean;
+        scaleControl?: ScaleControlOptions | boolean;
+        fullscreenControl?: FullscreenControlOptions | boolean;
+    };
 }
+
+export enum BasemapId {
+    Standard = 'standard',
+    StandardSatellite = 'standard-satellite',
+    Streets = 'streets',
+    Outdoors = 'outdoors',
+    Light = 'light',
+    Dark = 'dark',
+    Satellite = 'satellite',
+    SatelliteStreets = 'satellite-streets',
+    NavigationDay = 'navigation-day',
+    NavigationNight = 'navigation-night',
+}
+
+export type BasemapStyles =
+    | 'mapbox://styles/mapbox/standard'
+    | 'mapbox://styles/mapbox/standard-satellite'
+    | 'mapbox://styles/mapbox/streets-v12'
+    | 'mapbox://styles/mapbox/outdoors-v12'
+    | 'mapbox://styles/mapbox/light-v11'
+    | 'mapbox://styles/mapbox/dark-v11'
+    | 'mapbox://styles/mapbox/satellite-v9'
+    | 'mapbox://styles/mapbox/satellite-streets-v12'
+    | 'mapbox://styles/mapbox/navigation-day-v1'
+    | 'mapbox://styles/mapbox/navigation-night-v1';
+
+export type Basemaps = {
+    [key in BasemapId]: BasemapStyles;
+};

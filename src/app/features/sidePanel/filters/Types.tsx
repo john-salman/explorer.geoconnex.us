@@ -1,16 +1,11 @@
-import MultiSelect from "@/app/components/common/MultiSelect";
-import { setFilter } from "@/lib/state/main/slice";
-import { AppDispatch, RootState } from "@/lib/state/store";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import MultiSelect from '@/app/components/common/MultiSelect';
+import { setFilter } from '@/lib/state/main/slice';
+import { AppDispatch, RootState } from '@/lib/state/store';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 export const Types: React.FC = () => {
-    const {
-        visibleLayers: layers,
-        datasets,
-        filter,
-        filteredDatasets,
-    } = useSelector((state: RootState) => state.main);
+    const { datasets, filter } = useSelector((state: RootState) => state.main);
     const dispatch: AppDispatch = useDispatch();
 
     const [uniqueTypes, setUniqueTypes] = useState<string[]>([]);
@@ -26,27 +21,21 @@ export const Types: React.FC = () => {
                 if (!newUniqueTypes.includes(feature.properties.type)) {
                     newUniqueTypes.push(feature.properties.type);
                 }
-                let variable = feature.properties.variableMeasured;
-                if (feature.properties.variableMeasured.includes(' / ')) {
-                    variable = feature.properties.variableMeasured.split(' / ')[0];
-                }
             }
         });
 
         if (JSON.stringify(uniqueTypes) !== JSON.stringify(newUniqueTypes)) {
             setUniqueTypes(newUniqueTypes);
         }
-
     }, [datasets]);
 
     const handleTypeOptionClick = (type: string) => {
-        const newSelectedTypes = 
-            filter?.selectedTypes && filter.selectedTypes.includes(type) 
+        const newSelectedTypes =
+            filter?.selectedTypes && filter.selectedTypes.includes(type)
                 ? filter.selectedTypes.filter((item) => item !== type)
                 : [...(filter?.selectedTypes ?? []), type];
         dispatch(
             setFilter({
-                ...filter,
                 selectedTypes: newSelectedTypes,
             })
         );
@@ -54,7 +43,6 @@ export const Types: React.FC = () => {
 
     return (
         <>
-        
             {uniqueTypes.length > 0 && (
                 <MultiSelect
                     options={uniqueTypes}
@@ -63,5 +51,5 @@ export const Types: React.FC = () => {
                 />
             )}
         </>
-    )
-}
+    );
+};

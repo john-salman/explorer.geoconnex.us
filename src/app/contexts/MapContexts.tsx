@@ -38,6 +38,8 @@ export const MapProvider: React.FC<{
 
         setMaps(_maps);
     };
+
+    // Create default map context for all provided map id's
     const DEFAULT_MAPS: MapContextsType = {};
     mapIds.forEach((mapId) => {
         DEFAULT_MAPS[mapId] = {
