@@ -1,6 +1,13 @@
-import { GeoJSONSource, LngLat, LngLatBoundsLike, Map, Popup } from 'mapbox-gl';
+import {
+    GeoJSONFeature,
+    GeoJSONSource,
+    LngLat,
+    LngLatBoundsLike,
+    Map,
+    Popup,
+} from 'mapbox-gl';
 import { CLUSTER_TRANSITION_ZOOM, SourceId, SubLayerId } from './config';
-import { Feature, LineString } from 'geojson';
+import { Feature, LineString, Point } from 'geojson';
 import * as turf from '@turf/turf';
 
 export const calculateSpiderfiedPositionsConcentricCircle = (count: number) => {
@@ -65,60 +72,105 @@ export const calculateSpiderfiedPositions = (count: number) => {
     return points;
 };
 
-export const spiderfyCluster = (
+export const spiderfyClusters = async (
     map: Map,
     source: GeoJSONSource,
-    clusterId: number,
-    lngLat: LngLat
+    features: GeoJSONFeature[]
 ) => {
     if (!map) return;
-    source.getClusterLeaves(clusterId, Infinity, 0, (error, features) => {
-        if (error) return;
-        if (!features) return;
-        if (features.length > 0) {
-            const spiderfiedPositions =
-                features.length > 25
-                    ? calculateSpiderfiedPositionsConcentricCircle(
-                          features.length
-                      )
-                    : features.length > 10
-                    ? calculateSpiderfiedPositions(features.length)
-                    : calculateSpiderfiedPositionsCircle(features.length);
+    const totalLeaves: GeoJSON.GeoJSON = {
+        type: 'FeatureCollection',
+        features: [],
+    };
 
-            const geoJson: GeoJSON.GeoJSON = {
-                type: 'FeatureCollection',
-                features: features.map((feature, index) => ({
-                    ...feature,
-                    properties: {
-                        ...feature.properties,
-                        iconOffset: spiderfiedPositions[index],
-                        isNotFiltered: 1,
-                    },
-                    geometry: {
-                        ...feature.geometry,
-                        type: 'Point',
-                        coordinates: [lngLat.lng, lngLat.lat],
-                    },
-                })),
-            };
+    const promises = features.map((feature) => {
+        return new Promise((resolve, reject) => {
+            if (!feature.properties) {
+                return resolve(null);
+            }
+            const clusterId = feature.properties.cluster_id;
+            const coordinates = (feature.geometry as Point).coordinates as [
+                number,
+                number
+            ];
+            const lngLat = {
+                lng: coordinates[0],
+                lat: coordinates[1],
+            } as LngLat;
 
-            const spiderfySource = map.getSource(
-                SourceId.Spiderify
-            ) as GeoJSONSource;
-            spiderfySource.setData(geoJson);
+            source.getClusterLeaves(
+                clusterId,
+                Infinity,
+                0,
+                (error, features) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    if (!features) return resolve(null);
+                    if (features.length > 0) {
+                        const spiderfiedPositions =
+                            features.length > 25
+                                ? calculateSpiderfiedPositionsConcentricCircle(
+                                      features.length
+                                  )
+                                : features.length > 10
+                                ? calculateSpiderfiedPositions(features.length)
+                                : calculateSpiderfiedPositionsCircle(
+                                      features.length
+                                  );
 
-            map.setPaintProperty(
-                SubLayerId.AssociatedDataClusters,
-                'circle-opacity',
-                ['step', ['zoom'], 1, CLUSTER_TRANSITION_ZOOM, 0]
+                        const updatedFeatures = features.map(
+                            (feature, index) => ({
+                                ...feature,
+                                properties: {
+                                    ...feature.properties,
+                                    iconOffset: spiderfiedPositions[index],
+                                    isNotFiltered: 1,
+                                },
+                                geometry: {
+                                    ...feature.geometry,
+                                    type: 'Point',
+                                    coordinates: [lngLat.lng, lngLat.lat],
+                                },
+                            })
+                        );
+
+                        return resolve(updatedFeatures);
+                    }
+                    resolve(null);
+                }
             );
-            map.setPaintProperty(
-                SubLayerId.AssociatedDataClusterCount,
-                'text-opacity',
-                ['step', ['zoom'], 1, CLUSTER_TRANSITION_ZOOM, 0]
-            );
-        }
+        });
     });
+
+    try {
+        const results = await Promise.all(promises);
+        results.forEach((result) => {
+            if (result) {
+                totalLeaves.features = totalLeaves.features.concat(
+                    result as Feature[]
+                );
+            }
+        });
+
+        const spiderfySource = map.getSource(
+            SourceId.Spiderify
+        ) as GeoJSONSource;
+        spiderfySource.setData(totalLeaves);
+
+        map.setPaintProperty(
+            SubLayerId.AssociatedDataClusters,
+            'circle-opacity',
+            ['step', ['zoom'], 1, CLUSTER_TRANSITION_ZOOM, 0]
+        );
+        map.setPaintProperty(
+            SubLayerId.AssociatedDataClusterCount,
+            'text-opacity',
+            ['step', ['zoom'], 1, CLUSTER_TRANSITION_ZOOM, 0]
+        );
+    } catch (error) {
+        console.error('Error processing cluster leaves:', error);
+    }
 };
 
 export const deletePointsSpiderfy = (map: Map) => {

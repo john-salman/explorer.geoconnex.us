@@ -18,7 +18,6 @@ import { AppDispatch, RootState } from '@/lib/state/store';
 import {
     ExpressionSpecification,
     GeoJSONSource,
-    LngLat,
     LngLatBoundsLike,
     MapMouseEvent,
 } from 'mapbox-gl';
@@ -29,9 +28,9 @@ import {
     setSelectedData,
     setSelectedMainstemBBOX,
 } from '@/lib/state/main/slice';
-import { spiderfyCluster, zoomToMainStem } from '@/app/features/MainMap/utils';
+import { spiderfyClusters, zoomToMainStem } from '@/app/features/MainMap/utils';
 import * as turf from '@turf/turf';
-import { FeatureCollection, Geometry, Point } from 'geojson';
+import { FeatureCollection, Geometry } from 'geojson';
 import { Dataset } from '@/app/types';
 
 const INITIAL_CENTER: [number, number] = [-98.5795, 39.8282];
@@ -82,23 +81,32 @@ export const MainMap: React.FC<Props> = (props) => {
 
         map.on('zoom', () => {
             const zoom = map.getZoom();
-            const features = map.queryRenderedFeatures({
-                layers: [SubLayerId.AssociatedDataClusters],
-            });
-            if (zoom >= CLUSTER_TRANSITION_ZOOM && features.length === 1) {
-                const feature = features[0];
-                if (feature.properties) {
-                    const coordinates = (feature.geometry as Point)
-                        .coordinates as [number, number];
-                    const lngLat = {
-                        lng: coordinates[0],
-                        lat: coordinates[1],
-                    } as LngLat;
+            if (zoom >= CLUSTER_TRANSITION_ZOOM) {
+                const features = map.queryRenderedFeatures({
+                    layers: [SubLayerId.AssociatedDataClusters],
+                });
+                if (features.length) {
                     const source = map.getSource(
                         SourceId.AssociatedData
                     ) as GeoJSONSource;
-                    const clusterId = feature.properties.cluster_id;
-                    spiderfyCluster(map, source, clusterId, lngLat);
+
+                    spiderfyClusters(map, source, features);
+                }
+            }
+        });
+
+        map.on('drag', () => {
+            const zoom = map.getZoom();
+            if (zoom >= CLUSTER_TRANSITION_ZOOM) {
+                const features = map.queryRenderedFeatures({
+                    layers: [SubLayerId.AssociatedDataClusters],
+                });
+
+                if (features.length) {
+                    const source = map.getSource(
+                        SourceId.AssociatedData
+                    ) as GeoJSONSource;
+                    spiderfyClusters(map, source, features);
                 }
             }
         });

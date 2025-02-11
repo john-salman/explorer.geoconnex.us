@@ -10,7 +10,6 @@ import {
     DataDrivenPropertyValueSpecification,
     GeoJSONSource,
     LayerSpecification,
-    LngLat,
     Map,
     Popup,
 } from 'mapbox-gl';
@@ -18,7 +17,7 @@ import { defaultGeoJson } from '@/lib/state/utils';
 import { majorRivers } from '@/app/data/majorRivers';
 import {
     hasPeristentPopupOpenToThisItem,
-    spiderfyCluster,
+    spiderfyClusters,
 } from '@/app/features/MainMap/utils';
 import { basemaps } from '@/app/components/Map/consts';
 
@@ -93,7 +92,7 @@ export const sourceConfigs: SourceConfig[] = [
             type: 'geojson',
             data: defaultGeoJson,
             cluster: true,
-            clusterMaxZoom: CLUSTER_TRANSITION_ZOOM, // Max zoom to cluster points on
+            clusterMaxZoom: 20, // Max zoom to cluster points on
             clusterRadius: 50,
         },
     },
@@ -393,7 +392,6 @@ export const getLayerConfig = (
                 id: SubLayerId.AssociatedDataUnclustered,
                 type: 'circle',
                 source: SourceId.AssociatedData,
-                filter: ['!', ['has', 'point_count']],
                 paint: {
                     'circle-color': getLayerColor(
                         SubLayerId.AssociatedDataUnclustered
@@ -401,6 +399,20 @@ export const getLayerConfig = (
                     'circle-radius': 4,
                     'circle-stroke-width': 1,
                     'circle-stroke-color': '#fff',
+                    'circle-opacity': [
+                        'step',
+                        ['zoom'],
+                        0,
+                        CLUSTER_TRANSITION_ZOOM,
+                        1,
+                    ],
+                    'circle-stroke-opacity': [
+                        'step',
+                        ['zoom'],
+                        0,
+                        CLUSTER_TRANSITION_ZOOM,
+                        1,
+                    ],
                 },
             };
         case LayerId.SpiderifyPoints:
@@ -591,19 +603,12 @@ export const getLayerClickFunction = (
                                 if (err) return;
                                 const coordinates = (feature.geometry as Point)
                                     .coordinates as [number, number];
-                                const lngLat = {
-                                    lng: coordinates[0],
-                                    lat: coordinates[1],
-                                } as LngLat;
 
                                 if (zoom) {
                                     if (zoom > CLUSTER_TRANSITION_ZOOM) {
-                                        spiderfyCluster(
-                                            map,
-                                            source,
-                                            clusterId,
-                                            lngLat
-                                        );
+                                        spiderfyClusters(map, source, [
+                                            feature,
+                                        ]);
                                     }
                                     map.easeTo({
                                         center: coordinates,
