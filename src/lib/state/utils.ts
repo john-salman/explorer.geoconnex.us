@@ -1,8 +1,6 @@
 import { Dataset } from '@/app/types';
-import { createAsyncThunk } from '@reduxjs/toolkit';
 import { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
 import { GeoJSONFeature } from 'mapbox-gl';
-import parse from 'wellknown';
 
 export const defaultGeoJson: FeatureCollection<Geometry, GeoJsonProperties> = {
     type: 'FeatureCollection',
@@ -14,7 +12,8 @@ export const transformDatasets = (
 ): FeatureCollection<Geometry, Dataset> => {
     if (feature.properties && (feature.properties?.datasets ?? []).length > 0) {
         const features = feature.properties.datasets.map((dataset: any) => {
-            const geometry = parse(dataset.wkt); // unnecessary
+            const { lat, lng } = extractLatLng(dataset.wkt);
+            const geometry = { type: 'Point', coordinates: [lng, lat] };
             return {
                 type: 'Feature',
                 geometry,

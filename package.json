@@ -27,7 +27,6 @@
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
     "redux-mock-store": "^1.5.5",
-    "wellknown": "^0.5.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
   },
   "devDependencies": {
