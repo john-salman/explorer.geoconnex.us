@@ -8,6 +8,7 @@ First, install necessary dependencies:
 npm install
 ```
 
+Add your ``MAPBOX_ACCESS_TOKEN`` to your `.env` file.
 Then, run the development server:
 
 ```bash
