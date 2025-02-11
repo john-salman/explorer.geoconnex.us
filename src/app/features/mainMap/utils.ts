@@ -3,8 +3,33 @@ import { CLUSTER_TRANSITION_ZOOM, SourceId, SubLayerId } from './config';
 import { Feature, LineString } from 'geojson';
 import * as turf from '@turf/turf';
 
+export const calculateSpiderfiedPositionsConcentricCircle = (count: number) => {
+    const leavesSeparation = 300; // Separation between points in each circle
+    const baseOffset = [0, 0]; // Base offset
+    const points = []; // Array to store positions
+    const pointsPerCircle = 10; // Points per circle
+
+    let circleIndex = 0;
+
+    for (let i = 0; i < count; i += 1) {
+        if (i % pointsPerCircle === 0 && i !== 0) {
+            circleIndex += 1; // Move to the next circle after every 10 points
+        }
+
+        const radius = leavesSeparation * (circleIndex + 1); // Radius for the current circle
+        const theta = (2 * Math.PI) / pointsPerCircle; // Angle between each point in the circle
+        const angle = theta * (i % pointsPerCircle); // Current angle for the point
+
+        const x = radius * Math.cos(angle) + baseOffset[0]; // X-coordinate of the point
+        const y = radius * Math.sin(angle) + baseOffset[1]; // Y-coordinate of the point
+        points.push([x, y]); // Add the point to the array
+    }
+
+    return points;
+};
+
 export const calculateSpiderfiedPositionsCircle = (count: number) => {
-    const leavesSeparation = 500; // Separation between points
+    const leavesSeparation = 350; // Separation between points
     const leavesOffset = [0, 0]; // Base offset
     const points = []; // Array to store positions
     const theta = (2 * Math.PI) / count; // Angle between each point
@@ -52,7 +77,11 @@ export const spiderfyCluster = (
         if (!features) return;
         if (features.length > 0) {
             const spiderfiedPositions =
-                features.length > 10
+                features.length > 25
+                    ? calculateSpiderfiedPositionsConcentricCircle(
+                          features.length
+                      )
+                    : features.length > 10
                     ? calculateSpiderfiedPositions(features.length)
                     : calculateSpiderfiedPositionsCircle(features.length);
 

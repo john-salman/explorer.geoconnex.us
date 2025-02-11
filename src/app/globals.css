@@ -30,7 +30,6 @@ div#sidePanel {
 }
 
 div#scrollable-sidepanel {
-    height: calc(100vh - 116px);
     max-height: calc(100vh - 116px);
     overflow-y: auto;
 }
