@@ -14,7 +14,6 @@ import {
     Popup,
 } from 'mapbox-gl';
 import { defaultGeoJson } from '@/lib/state/utils';
-import { majorRivers } from '@/app/data/majorRivers';
 import {
     hasPeristentPopupOpenToThisItem,
     spiderfyClusters,
@@ -75,14 +74,6 @@ export const sourceConfigs: SourceConfig[] = [
             maxzoom: 10,
             tileSize: 512,
             bounds: [-124.707777, 25.190876, -67.05824, 49.376613],
-        },
-    },
-    {
-        id: SourceId.MajorRivers,
-        type: Sources.GeoJSON,
-        definition: {
-            type: 'geojson',
-            data: majorRivers,
         },
     },
     {
@@ -272,8 +263,9 @@ export const getLayerConfig = (
             return {
                 id: LayerId.MajorRivers, // Layer ID
                 type: 'line',
-                source: SourceId.MajorRivers,
-
+                source: SourceId.Mainstems,
+                'source-layer': SourceId.Mainstems,
+                filter: ['>=', ['get', 'outlet_drainagearea_sqkm'], 50000],
                 layout: {
                     'line-cap': 'round',
                     'line-join': 'round',
