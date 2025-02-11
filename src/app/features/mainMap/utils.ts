@@ -1,5 +1,5 @@
 import { GeoJSONSource, LngLat, LngLatBoundsLike, Map, Popup } from 'mapbox-gl';
-import { SourceId, SubLayerId } from './config';
+import { CLUSTER_TRANSITION_ZOOM, SourceId, SubLayerId } from './config';
 import { Feature, LineString } from 'geojson';
 import * as turf from '@turf/turf';
 
@@ -36,6 +36,7 @@ export const calculateSpiderfiedPositions = (count: number) => {
 
         legLength += (Math.PI * 2 * legLengthFactor) / angle; // Increase the leg length
     }
+
     return points;
 };
 
@@ -80,17 +81,12 @@ export const spiderfyCluster = (
             map.setPaintProperty(
                 SubLayerId.AssociatedDataClusters,
                 'circle-opacity',
-                0
+                ['step', ['zoom'], 1, CLUSTER_TRANSITION_ZOOM, 0]
             );
             map.setPaintProperty(
                 SubLayerId.AssociatedDataClusterCount,
                 'text-opacity',
-                0
-            );
-            map.setPaintProperty(
-                SubLayerId.AssociatedDataUnclustered,
-                'circle-opacity',
-                0.5
+                ['step', ['zoom'], 1, CLUSTER_TRANSITION_ZOOM, 0]
             );
         }
     });
@@ -110,8 +106,8 @@ export const deletePointsSpiderfy = (map: Map) => {
         1
     );
     map.setPaintProperty(
-        SubLayerId.AssociatedDataUnclustered,
-        'circle-opacity',
+        SubLayerId.AssociatedDataClusterCount,
+        'text-opacity',
         1
     );
 };

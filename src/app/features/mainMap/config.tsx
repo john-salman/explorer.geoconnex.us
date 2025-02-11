@@ -57,6 +57,8 @@ export const allLayerIds = [
     ...Object.values(SubLayerId),
 ];
 
+export const CLUSTER_TRANSITION_ZOOM = 14;
+
 /**********************************************************************
  * Define the various datasources this map will use
  **********************************************************************/
@@ -91,7 +93,7 @@ export const sourceConfigs: SourceConfig[] = [
             type: 'geojson',
             data: defaultGeoJson,
             cluster: true,
-            clusterMaxZoom: 20, // Max zoom to cluster points on
+            clusterMaxZoom: CLUSTER_TRANSITION_ZOOM, // Max zoom to cluster points on
             clusterRadius: 50,
         },
     },
@@ -413,9 +415,9 @@ export const getLayerConfig = (
                         'interpolate',
                         ['linear'],
                         ['zoom'],
-                        14,
+                        CLUSTER_TRANSITION_ZOOM,
                         0, // Set opacity to 0 at zoom level 14
-                        14.01,
+                        CLUSTER_TRANSITION_ZOOM + 0.01,
                         ['get', 'isNotFiltered'], // Use the data property for zoom levels over 13
                     ],
                 },
@@ -595,8 +597,7 @@ export const getLayerClickFunction = (
                                 } as LngLat;
 
                                 if (zoom) {
-                                    if (zoom > 14) {
-                                        console.log('spiderify');
+                                    if (zoom > CLUSTER_TRANSITION_ZOOM) {
                                         spiderfyCluster(
                                             map,
                                             source,
@@ -607,6 +608,7 @@ export const getLayerClickFunction = (
                                     map.easeTo({
                                         center: coordinates,
                                         zoom: zoom,
+                                        duration: 1000,
                                     });
                                 }
                             }

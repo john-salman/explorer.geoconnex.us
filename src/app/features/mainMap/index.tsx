@@ -10,6 +10,7 @@ import {
     LayerId,
     SourceId,
     BASEMAP,
+    CLUSTER_TRANSITION_ZOOM,
 } from '@/app/features/MainMap/config';
 import { useMap } from '@/app/contexts/MapContexts';
 import { useDispatch, useSelector } from 'react-redux';
@@ -17,6 +18,7 @@ import { AppDispatch, RootState } from '@/lib/state/store';
 import {
     ExpressionSpecification,
     GeoJSONSource,
+    LngLat,
     LngLatBoundsLike,
     MapMouseEvent,
 } from 'mapbox-gl';
@@ -26,11 +28,10 @@ import {
     setLayerVisibility,
     setSelectedData,
     setSelectedMainstemBBOX,
-    setSelectedMainstemId,
 } from '@/lib/state/main/slice';
-import { zoomToMainStem } from '@/app/features/MainMap/utils';
+import { spiderfyCluster, zoomToMainStem } from '@/app/features/MainMap/utils';
 import * as turf from '@turf/turf';
-import { FeatureCollection, Geometry } from 'geojson';
+import { FeatureCollection, Geometry, Point } from 'geojson';
 import { Dataset } from '@/app/types';
 
 const INITIAL_CENTER: [number, number] = [-98.5795, 39.8282];
@@ -61,7 +62,7 @@ export const MainMap: React.FC<Props> = (props) => {
         }
 
         const onZoom = () => {
-            const zoom = Math.round(map.getZoom());
+            const zoom = map.getZoom();
             if (zoom >= 5) {
                 dispatch(
                     setLayerVisibility({
@@ -78,6 +79,29 @@ export const MainMap: React.FC<Props> = (props) => {
         };
 
         map.on('zoom', onZoom);
+
+        map.on('zoom', () => {
+            const zoom = map.getZoom();
+            const features = map.queryRenderedFeatures({
+                layers: [SubLayerId.AssociatedDataClusters],
+            });
+            if (zoom >= CLUSTER_TRANSITION_ZOOM && features.length === 1) {
+                const feature = features[0];
+                if (feature.properties) {
+                    const coordinates = (feature.geometry as Point)
+                        .coordinates as [number, number];
+                    const lngLat = {
+                        lng: coordinates[0],
+                        lat: coordinates[1],
+                    } as LngLat;
+                    const source = map.getSource(
+                        SourceId.AssociatedData
+                    ) as GeoJSONSource;
+                    const clusterId = feature.properties.cluster_id;
+                    spiderfyCluster(map, source, clusterId, lngLat);
+                }
+            }
+        });
 
         map.loadImage('marker.png', (error, image) => {
             if (error) throw error;
@@ -112,7 +136,6 @@ export const MainMap: React.FC<Props> = (props) => {
                     if (feature.properties) {
                         const id = feature.properties.id;
                         dispatch(fetchDatasets(id));
-                        dispatch(setSelectedMainstemId(id));
                         zoomToMainStem(map, id);
                     }
                 }
