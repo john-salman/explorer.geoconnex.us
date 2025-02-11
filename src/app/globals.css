@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --background: #ffffff;
+    --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
+}
+
+body {
+    color: var(--foreground);
+    background: black;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#map-container-main {
+    width: 100vw;
+    height: 100vh;
+}
+
+div#sidePanel {
+    z-index: 1;
+}
+
+div#scrollable-sidepanel {
+    max-height: calc(100vh - 116px);
+    overflow-y: auto;
+}
+
+div#tools {
+    z-index: 1;
+}
+
+#date-range-columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 600px) {
+    #date-range-columns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.mapboxgl-popup-close-button {
+    font-size: x-large;
+    right: 3px;
+}
