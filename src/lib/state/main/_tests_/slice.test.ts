@@ -22,28 +22,28 @@ describe('mainSlice', () => {
         store = configureStore({ reducer: { main: mainReducer } });
     });
 
-    it('should handle setSearchResultIds', () => {
+    test('should handle setSearchResultIds', () => {
         const searchResultIds = ['id1', 'id2'];
         store.dispatch(setSearchResultIds(searchResultIds));
         const state = store.getState().main;
         expect(state.searchResultIds).toEqual(searchResultIds);
     });
 
-    it('should handle setSelectedMainstemId', () => {
+    test('should handle setSelectedMainstemId', () => {
         const selectedMainstemId = 1;
         store.dispatch(setSelectedMainstemId(selectedMainstemId));
         const state = store.getState().main;
         expect(state.selectedMainstemId).toEqual(selectedMainstemId);
     });
 
-    it('should handle setHoverId', () => {
+    test('should handle setHoverId', () => {
         const hoverId = 2;
         store.dispatch(setHoverId(hoverId));
         const state = store.getState().main;
         expect(state.hoverId).toEqual(hoverId);
     });
 
-    it('should handle setDatasets', () => {
+    test('should handle setDatasets', () => {
         const datasets: FeatureCollection<Geometry, Dataset> = {
             type: 'FeatureCollection',
             features: [],
@@ -54,7 +54,7 @@ describe('mainSlice', () => {
         expect(state.filteredDatasets).toEqual(datasets);
     });
 
-    it('should handle setFilteredDatasets', () => {
+    test('should handle setFilteredDatasets', () => {
         const filteredDatasets: FeatureCollection<Geometry, Dataset> = {
             type: 'FeatureCollection',
             features: [],
@@ -64,14 +64,14 @@ describe('mainSlice', () => {
         expect(state.filteredDatasets).toEqual(filteredDatasets);
     });
 
-    it('should handle setLayerVisibility', () => {
+    test('should handle setLayerVisibility', () => {
         const visibleLayers = { [LayerId.MajorRivers]: false };
         store.dispatch(setLayerVisibility(visibleLayers));
         const state = store.getState().main;
         expect(state.visibleLayers[LayerId.MajorRivers]).toEqual(false);
     });
 
-    it('should handle setSelectedData', () => {
+    test('should handle setSelectedData', () => {
         const selectedData = {
             datasetDescription: '',
             distributionFormat: '',
@@ -92,21 +92,21 @@ describe('mainSlice', () => {
         expect(state.selectedData).toEqual(selectedData);
     });
 
-    it('should handle setFilter', () => {
+    test('should handle setFilter', () => {
         const filter = { selectedTypes: ['type1'] };
         store.dispatch(setFilter(filter));
         const state = store.getState().main;
         expect(state.filter.selectedTypes).toEqual(['type1']);
     });
 
-    it('should handle setView', () => {
+    test('should handle setView', () => {
         const view = 'table';
         store.dispatch(setView(view));
         const state = store.getState().main;
         expect(state.view).toEqual(view);
     });
 
-    it('should handle setSelectedMainstemBBOX', () => {
+    test('should handle setSelectedMainstemBBOX', () => {
         const bbox: [number, number, number, number] = [0, 0, 1, 1];
         store.dispatch(setSelectedMainstemBBOX(bbox));
         const state = store.getState().main;

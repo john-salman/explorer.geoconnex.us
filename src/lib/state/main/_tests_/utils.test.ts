@@ -8,14 +8,14 @@ import { Feature, FeatureCollection, Geometry } from 'geojson';
 
 describe('utils', () => {
     describe('extractLatLng', () => {
-        it('should extract latitude and longitude from WKT string', () => {
+        test('should extract latitude and longitude from WKT string', () => {
             const wkt = 'POINT (30 10)';
             const { lat, lng } = extractLatLng(wkt);
             expect(lat).toBe(10);
             expect(lng).toBe(30);
         });
 
-        it('should handle invalid WKT string', () => {
+        test('should handle invalid WKT string', () => {
             const wkt = 'INVALID';
             const { lat, lng } = extractLatLng(wkt);
             expect(lat).toBeNaN();
@@ -24,7 +24,7 @@ describe('utils', () => {
     });
 
     describe('transformDatasets', () => {
-        it('should transform datasets correctly', () => {
+        test('should transform datasets correctly', () => {
             const feature: Feature = {
                 type: 'Feature',
                 geometry: {
@@ -84,7 +84,7 @@ describe('utils', () => {
             expect(result).toEqual(expected);
         });
 
-        it('should return defaultGeoJson if no datasets are present', () => {
+        test('should return defaultGeoJson if no datasets are present', () => {
             const feature: Feature = {
                 type: 'Feature',
                 geometry: {
