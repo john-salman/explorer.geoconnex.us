@@ -1,21 +1,16 @@
 'use client';
 import { Provider, useSelector } from 'react-redux';
-// import { MainMap } from '@/app/features/MainMap';
+import { MainMap } from '@/app/features/MainMap';
 import store, { RootState } from '@/lib/state/store';
 import { MapProvider } from '@/app/contexts/MapContexts';
 import { MAP_ID as MAIN_MAP_ID } from '@/app/features/MainMap/config';
 import { SidePanel } from '@/app/features/SidePanel';
 import Table from '@/app/features/Table';
 import { MapTools } from './features/MapTools';
-import dynamic from 'next/dynamic';
-import { lazy } from 'react';
 
 type Props = {
     accessToken: string;
 };
-
-// const MainMap = dynamic(() => import('@/app/features/MainMap'), { ssr: false });
-const MainMap = lazy(() => import('@/app/features/MainMap'));
 
 export const App: React.FC<Props> = (props) => {
     const { accessToken } = props;
