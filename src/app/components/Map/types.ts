@@ -11,9 +11,9 @@ import {
     MapMouseEvent,
     Map,
     Popup,
+    FullscreenControlOptions,
     NavigationControlOptions,
     ScaleControlOptions,
-    FullscreenControlOptions,
 } from 'mapbox-gl';
 
 export type SourceDefinition =

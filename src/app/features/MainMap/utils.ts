@@ -10,10 +10,12 @@ import { CLUSTER_TRANSITION_ZOOM, SourceId, SubLayerId } from './config';
 import { Feature, LineString, Point } from 'geojson';
 import * as turf from '@turf/turf';
 
-export const calculateSpiderfiedPositionsConcentricCircle = (count: number) => {
+export const calculateSpiderfiedPositionsConcentricCircle = (
+    count: number
+): [number, number][] => {
     const leavesSeparation = 300; // Separation between points in each circle
     const baseOffset = [0, 0]; // Base offset
-    const points = []; // Array to store positions
+    const points: [number, number][] = []; // Array to store positions
     const pointsPerCircle = 10; // Points per circle
 
     let circleIndex = 0;
@@ -35,10 +37,12 @@ export const calculateSpiderfiedPositionsConcentricCircle = (count: number) => {
     return points;
 };
 
-export const calculateSpiderfiedPositionsCircle = (count: number) => {
+export const calculateSpiderfiedPositionsCircle = (
+    count: number
+): [number, number][] => {
     const leavesSeparation = 350; // Separation between points
     const leavesOffset = [0, 0]; // Base offset
-    const points = []; // Array to store positions
+    const points: [number, number][] = []; // Array to store positions
     const theta = (2 * Math.PI) / count; // Angle between each point
     let angle = theta;
 
@@ -51,12 +55,14 @@ export const calculateSpiderfiedPositionsCircle = (count: number) => {
     return points;
 };
 
-export const calculateSpiderfiedPositions = (count: number) => {
+export const calculateSpiderfiedPositions = (
+    count: number
+): [number, number][] => {
     const legLengthStart = 100; // Initial leg length of the spiral
     const legLengthFactor = 100; // Factor for increasing the leg length
     const leavesSeparation = 500; // Separation between points
     const leavesOffset = [0, 0]; // Base offset
-    const points = []; // Array to store positions
+    const points: [number, number][] = []; // Array to store positions
     let legLength = legLengthStart; // Current leg length
     let angle = 0; // Initial angle
 
@@ -225,5 +231,3 @@ export const hasPeristentPopupOpenToThisItem = (
 ) => {
     return popUp.isOpen() && popUp._content?.innerHTML.includes(itemId);
 };
-
-// export const zoomToHucBoundary = (map: Map) => {};

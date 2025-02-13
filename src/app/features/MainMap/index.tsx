@@ -20,6 +20,8 @@ import {
     GeoJSONSource,
     LngLatBoundsLike,
     MapMouseEvent,
+    NavigationControl,
+    ScaleControl,
 } from 'mapbox-gl';
 import { extractLatLng } from '@/lib/state/utils';
 import {
@@ -180,10 +182,6 @@ export const MainMap: React.FC<Props> = (props) => {
                 });
             }
         });
-
-        // map.on('styleimagemissing', (e) => {
-        //     console.log(' styleimagemissing E', e);
-        // });
     }, [map]);
 
     useEffect(() => {
@@ -223,7 +221,7 @@ export const MainMap: React.FC<Props> = (props) => {
                 }" target="_blank" style="margin:0 auto;">More Info</a>
               </span>`;
                 persistentPopup.setLngLat(e.lngLat).setHTML(html).addTo(map);
-                dispatch(setSelectedData(feature.properties));
+                dispatch(setSelectedData(feature.properties as Dataset));
             }
         });
     }, [map]);
@@ -369,3 +367,5 @@ export const MainMap: React.FC<Props> = (props) => {
         </>
     );
 };
+
+export default MainMap;

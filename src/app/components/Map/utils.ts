@@ -3,8 +3,8 @@ import {
     SourceSpecification,
     Popup,
     ScaleControl,
-    NavigationControl,
     FullscreenControl,
+    NavigationControl,
 } from 'mapbox-gl';
 import {
     MainLayerDefinition,
@@ -12,16 +12,22 @@ import {
     SourceConfig,
     Sources,
 } from '@/app/components/Map/types';
-import FeatureService, {
-    FeatureServiceOptions,
-} from '@hansdo/mapbox-gl-arcgis-featureserver';
+import { FeatureServiceOptions } from '@hansdo/mapbox-gl-arcgis-featureserver';
 
-export const addSources = (map: Map, sourceConfigs: SourceConfig[]) => {
+export const addSources = (
+    map: Map,
+    sourceConfigs: SourceConfig[],
+    featureService: (
+        sourceId: string,
+        map: Map,
+        options: FeatureServiceOptions
+    ) => void
+) => {
     sourceConfigs.forEach((sourceConfig) => {
         switch (sourceConfig.type) {
             case Sources.ESRI:
                 if (!map.getSource(sourceConfig.id)) {
-                    new FeatureService(
+                    featureService(
                         sourceConfig.id,
                         map,
                         sourceConfig.definition as FeatureServiceOptions
@@ -182,20 +188,3 @@ export const addControls = (
         }
     }
 };
-
-// I dont think an approach like this will be necessary
-// export const addGeoJSONSource = (source: SourceDefinition) => {
-//     return source as GeoJSONSource;
-// };
-// export const addVectorSource = (source: SourceDefinition) => {
-//     return source as VectorSource;
-// };
-// export const addRasterSource = (source: SourceDefinition) => {
-//     return source as RasterSource<'raster'>;
-// };
-// export const addImageSource = (source: SourceDefinition) => {
-//     return source as ImageSource;
-// };
-// export const addVideoSource = (source: SourceDefinition) => {
-//     return source as VideoSource;
-// };
