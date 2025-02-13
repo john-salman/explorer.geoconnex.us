@@ -1,48 +1,115 @@
-// import configureMockStore from 'redux-mock-store';
-// import thunk from 'redux-thunk';
-// import fetchMock from 'fetch-mock';
-// import { fetchDatasets, searchMainstemsCQL } from '../slice';
+import { configureStore, Store } from '@reduxjs/toolkit';
+import mainReducer, {
+    setSearchResultIds,
+    setSelectedMainstemId,
+    setHoverId,
+    setDatasets,
+    setFilteredDatasets,
+    setLayerVisibility,
+    setSelectedData,
+    setFilter,
+    setView,
+    setSelectedMainstemBBOX,
+} from '@/lib/state/main/slice';
+import { FeatureCollection, Geometry } from 'geojson';
+import { Dataset } from '@/app/types';
+import { LayerId } from '@/app/features/MainMap/config';
 
-// const middlewares = [thunk];
-// const mockStore = configureMockStore(middlewares);
+describe('mainSlice', () => {
+    let store: Store;
 
-// describe('mainSlice thunks', () => {
-//   afterEach(() => {
-//     fetchMock.hardReset(); // Might not be optimal
-//   });
+    beforeEach(() => {
+        store = configureStore({ reducer: { main: mainReducer } });
+    });
 
-//   it('dispatches correct actions on fetchDatasets success', async () => {
-//     const mockData = { data: 'some data' };
-//     fetchMock.getOnce('https://reference.geoconnex.us/collections/mainstems/items/1', {
-//       body: mockData,
-//       headers: { 'content-type': 'application/json' },
-//     });
+    it('should handle setSearchResultIds', () => {
+        const searchResultIds = ['id1', 'id2'];
+        store.dispatch(setSearchResultIds(searchResultIds));
+        const state = store.getState().main;
+        expect(state.searchResultIds).toEqual(searchResultIds);
+    });
 
-//     const expectedActions = [ 
-//       { type: fetchDatasets.pending.type },
-//       { type: fetchDatasets.fulfilled.type, payload: mockData },
-//     ];
-//     const store = mockStore({});
+    it('should handle setSelectedMainstemId', () => {
+        const selectedMainstemId = 1;
+        store.dispatch(setSelectedMainstemId(selectedMainstemId));
+        const state = store.getState().main;
+        expect(state.selectedMainstemId).toEqual(selectedMainstemId);
+    });
 
-//     await store.dispatch(fetchDatasets(1));
-//     expect(store.getActions()).toEqual(expectedActions);
-//   });
+    it('should handle setHoverId', () => {
+        const hoverId = 2;
+        store.dispatch(setHoverId(hoverId));
+        const state = store.getState().main;
+        expect(state.hoverId).toEqual(hoverId);
+    });
 
-//   it('dispatches correct actions on searchMainstemsCQL success', async () => {
-//     const mockData = { data: 'some search results' };
-//     const query = 'Willamette'
-//     fetchMock.getOnce(`https://reference.geoconnex.us/collections/mainstems/items?filter=name_at_outlet+ILIKE+'%${query}%'&f=json&skipGeometry=true`, {
-//       body: mockData,
-//       headers: { 'content-type': 'application/json' },
-//     });
+    it('should handle setDatasets', () => {
+        const datasets: FeatureCollection<Geometry, Dataset> = {
+            type: 'FeatureCollection',
+            features: [],
+        };
+        store.dispatch(setDatasets(datasets));
+        const state = store.getState().main;
+        expect(state.datasets).toEqual(datasets);
+        expect(state.filteredDatasets).toEqual(datasets);
+    });
 
-//     const expectedActions = [
-//       { type: searchMainstemsCQL.pending.type },
-//       { type: searchMainstemsCQL.fulfilled.type, payload: mockData },
-//     ];
-//     const store = mockStore({});
+    it('should handle setFilteredDatasets', () => {
+        const filteredDatasets: FeatureCollection<Geometry, Dataset> = {
+            type: 'FeatureCollection',
+            features: [],
+        };
+        store.dispatch(setFilteredDatasets(filteredDatasets));
+        const state = store.getState().main;
+        expect(state.filteredDatasets).toEqual(filteredDatasets);
+    });
 
-//     await store.dispatch(searchMainstemsCQL(query));
-//     expect(store.getActions()).toEqual(expectedActions);
-//   });
-// });
+    it('should handle setLayerVisibility', () => {
+        const visibleLayers = { [LayerId.MajorRivers]: false };
+        store.dispatch(setLayerVisibility(visibleLayers));
+        const state = store.getState().main;
+        expect(state.visibleLayers[LayerId.MajorRivers]).toEqual(false);
+    });
+
+    it('should handle setSelectedData', () => {
+        const selectedData = {
+            datasetDescription: '',
+            distributionFormat: '',
+            distributionName: '',
+            distributionURL: '',
+            measurementTechnique: '',
+            monitoringLocation: '',
+            siteName: '',
+            temporalCoverage: '',
+            type: '',
+            url: '',
+            variableMeasured: '',
+            variableUnit: '',
+            wkt: '',
+        };
+        store.dispatch(setSelectedData(selectedData));
+        const state = store.getState().main;
+        expect(state.selectedData).toEqual(selectedData);
+    });
+
+    it('should handle setFilter', () => {
+        const filter = { selectedTypes: ['type1'] };
+        store.dispatch(setFilter(filter));
+        const state = store.getState().main;
+        expect(state.filter.selectedTypes).toEqual(['type1']);
+    });
+
+    it('should handle setView', () => {
+        const view = 'table';
+        store.dispatch(setView(view));
+        const state = store.getState().main;
+        expect(state.view).toEqual(view);
+    });
+
+    it('should handle setSelectedMainstemBBOX', () => {
+        const bbox: [number, number, number, number] = [0, 0, 1, 1];
+        store.dispatch(setSelectedMainstemBBOX(bbox));
+        const state = store.getState().main;
+        expect(state.selectedMainstemBBOX).toEqual(bbox);
+    });
+});

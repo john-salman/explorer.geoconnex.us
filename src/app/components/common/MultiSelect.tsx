@@ -49,6 +49,7 @@ const MultiSelect: React.FC<Props> = (props) => {
                             >
                                 <div className="flex items-center">
                                     <input
+                                        data-testid={type}
                                         type="checkbox"
                                         checked={selectedOptions?.includes(
                                             type
@@ -56,12 +57,12 @@ const MultiSelect: React.FC<Props> = (props) => {
                                         onChange={() => handleOptionClick(type)}
                                         className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                     />
-                                    <span
+                                    <label
                                         title={type}
                                         className="ml-3 block truncate"
                                     >
                                         {type}
-                                    </span>
+                                    </label>
                                 </div>
                             </li>
                         ))}
