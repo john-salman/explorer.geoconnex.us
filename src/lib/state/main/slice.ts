@@ -4,14 +4,14 @@ import { defaultGeoJson, transformDatasets } from '../utils';
 import { FeatureCollection, Geometry } from 'geojson';
 import { LayerId, SubLayerId } from '@/app/features/MainMap/config';
 import { Dataset } from '@/app/types';
-import { LngLatBoundsLike } from 'mapbox-gl';
+import { GeoJSONFeature, LngLatBoundsLike } from 'mapbox-gl';
 import * as turf from '@turf/turf';
 
 type InitialState = {
     selectedMainstemId: number | null;
     selectedMainstemBBOX: LngLatBoundsLike | null;
     hoverId: number | null;
-    selectedData: any | null;
+    selectedData: Dataset | null;
     searchResultIds: string[];
     status: string;
     error: string | null;
@@ -219,7 +219,7 @@ export const mainSlice = createSlice({
             })
             .addCase(
                 fetchDatasets.fulfilled,
-                (state, action: PayloadAction<any>) => {
+                (state, action: PayloadAction<GeoJSONFeature>) => {
                     state.status = 'succeeded';
                     if (action.payload) {
                         const datasets = transformDatasets(action.payload);

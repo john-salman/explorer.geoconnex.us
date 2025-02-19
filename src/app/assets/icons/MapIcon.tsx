@@ -2,6 +2,7 @@ import React from 'react';
 const MapIcon: React.FC = () => {
     return (
         <svg
+            data-testid="map-icon"
             className="w-6 h-6 text-blue-500"
             fill="none"
             stroke="currentColor"

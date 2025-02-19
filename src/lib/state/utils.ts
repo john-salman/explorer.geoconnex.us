@@ -1,6 +1,10 @@
 import { Dataset } from '@/app/types';
-import { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
-import { GeoJSONFeature } from 'mapbox-gl';
+import {
+    Feature,
+    FeatureCollection,
+    GeoJsonProperties,
+    Geometry,
+} from 'geojson';
 
 export const defaultGeoJson: FeatureCollection<Geometry, GeoJsonProperties> = {
     type: 'FeatureCollection',
@@ -8,19 +12,27 @@ export const defaultGeoJson: FeatureCollection<Geometry, GeoJsonProperties> = {
 };
 
 export const transformDatasets = (
-    feature: GeoJSONFeature
+    feature: Feature
 ): FeatureCollection<Geometry, Dataset> => {
     if (feature.properties && (feature.properties?.datasets ?? []).length > 0) {
-        const features = feature.properties.datasets.map((dataset: any) => {
+        const features = feature.properties.datasets.map((dataset: Dataset) => {
             const { lat, lng } = extractLatLng(dataset.wkt);
-            const geometry = { type: 'Point', coordinates: [lng, lat] };
-            return {
-                type: 'Feature',
-                geometry,
-                properties: {
-                    ...dataset,
-                },
-            };
+            if (!isNaN(lat) && !isNaN(lng)) {
+                const geometry = { type: 'Point', coordinates: [lng, lat] };
+                return {
+                    type: 'Feature',
+                    geometry,
+                    properties: {
+                        ...dataset,
+                    },
+                };
+            } else {
+                console.log('Error in dataset: ', dataset);
+                console.log(
+                    'Unable to extract lat lng from wkt: ',
+                    dataset.wkt
+                );
+            }
         });
 
         return {
@@ -35,5 +47,5 @@ export const transformDatasets = (
 export const extractLatLng = (wkt: string) => {
     const coordinates = wkt.replace('POINT (', '').replace(')', '');
     const [lng, lat] = coordinates.split(' ').map(Number);
-    return { lat, lng };
+    return { lat: lat || NaN, lng: lng || NaN };
 };
