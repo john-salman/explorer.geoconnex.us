@@ -2,7 +2,10 @@ import { useCallback } from 'react';
 import { MainLayerDefinition } from '@/app/components/Map/types';
 
 type Props = {
-    handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    handleChange: (
+        event: React.ChangeEvent<HTMLInputElement>,
+        isPrimary: boolean
+    ) => void;
     getLayerName: (id: string) => string;
     getLayerColor: (id: string) => string;
     visibleLayers: { [key in string]: boolean };
@@ -27,7 +30,7 @@ export const Toggles: React.FC<Props> = (props) => {
                                 type="checkbox"
                                 name={layer.id}
                                 checked={visibleLayers[layer.id]}
-                                onChange={(e) => handleChange(e)}
+                                onChange={(e) => handleChange(e, true)}
                                 className="mr-1"
                             />
                             {getLayerName(layer.id)}
@@ -43,22 +46,26 @@ export const Toggles: React.FC<Props> = (props) => {
 
                     {layer.subLayers &&
                         layer.subLayers.length > 0 &&
-                        layer.subLayers.map((sublayer) => (
-                            <div
-                                key={`layer-control-${layer.id}-${sublayer.id}`}
-                                className="ml-4 p-1 flex items-center justify-between w-[7vw]"
-                            >
-                                <label className="font-large mr-1">
-                                    <input
-                                        type="checkbox"
-                                        name={sublayer.id}
-                                        checked={visibleLayers[sublayer.id]}
-                                        onChange={(e) => handleChange(e)}
-                                        className="mr-1"
-                                    />
-                                    {getLayerName(sublayer.id)}
-                                </label>
-                                {/* {getLayerColor(sublayer.id) &&
+                        layer.subLayers
+                            .filter((sublayer) => sublayer.controllable)
+                            .map((sublayer) => (
+                                <div
+                                    key={`layer-control-${layer.id}-${sublayer.id}`}
+                                    className="ml-4 p-1 flex items-center justify-between w-[7vw]"
+                                >
+                                    <label className="font-large mr-1">
+                                        <input
+                                            type="checkbox"
+                                            name={sublayer.id}
+                                            checked={visibleLayers[sublayer.id]}
+                                            onChange={(e) =>
+                                                handleChange(e, false)
+                                            }
+                                            className="mr-1"
+                                        />
+                                        {getLayerName(sublayer.id)}
+                                    </label>
+                                    {/* {getLayerColor(sublayer.id) &&
                                     typeof getLayerColor(sublayer.id) ===
                                         'string' && (
                                         <HorizontalLine
@@ -70,8 +77,8 @@ export const Toggles: React.FC<Props> = (props) => {
                                             }
                                         />
                                     )} */}
-                            </div>
-                        ))}
+                                </div>
+                            ))}
                 </div>
             ));
     }, [visibleLayers]);

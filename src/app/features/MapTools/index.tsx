@@ -9,40 +9,41 @@ import {
     layerDefinitions,
     getLayerColor,
     getLayerName,
-    BASEMAP as MAIN_BASEMAP,
-    MAP_ID as MAIN_MAP_ID,
+    getLayerConfig,
 } from '@/app/features/MainMap/config';
 import IconButton from '@/app/components/common/IconButton';
 import MapIcon from '@/app/assets/icons/MapIcon';
-import { useMap } from '@/app/contexts/MapContexts';
-import BasemapSelector from '@/app/components/Map/tools/BasemapSelector';
-import { BasemapStyles } from '@/app/components/Map/types';
+import { Legend } from '@/app/components/Map/tools/Legend';
+import { LayerSpecification } from 'mapbox-gl';
 
 export const MapTools: React.FC = () => {
     const { visibleLayers } = useSelector((state: RootState) => state.main);
 
     const dispatch: AppDispatch = useDispatch();
 
-    const { map } = useMap(MAIN_MAP_ID);
-
     const [showTools, setShowTools] = useState(false);
     const [showLayerToggle, setShowLayerToggle] = useState(false);
-    const [showBaseMapSelector, setShowBaseMapSelector] = useState(false);
-
-    const [selectedBasemap, setSelectedBasemap] =
-        useState<BasemapStyles>(MAIN_BASEMAP);
+    const [showLegend, setShowLegend] = useState(false);
 
     const handleLayerVizChange = (
-        event: React.ChangeEvent<HTMLInputElement>
+        event: React.ChangeEvent<HTMLInputElement>,
+        isPrimary: boolean
     ) => {
         const { name, checked } = event.target;
-        dispatch(setLayerVisibility({ [name as LayerId]: checked }));
-    };
-
-    const handleStyleChange = (style: BasemapStyles) => {
-        setSelectedBasemap(style);
-        if (map) {
-            map.setStyle(style);
+        if (isPrimary) {
+            const layerId = name as LayerId;
+            const layerDef = layerDefinitions.find(
+                (layerDef) => layerDef.id === layerId
+            );
+            dispatch(setLayerVisibility({ [layerId]: checked }));
+            if (layerDef?.subLayers?.length) {
+                layerDef.subLayers.forEach((subLayer) =>
+                    dispatch(setLayerVisibility({ [subLayer.id]: checked }))
+                );
+            }
+        } else {
+            const subLayerId = name as LayerId;
+            dispatch(setLayerVisibility({ [subLayerId]: checked }));
         }
     };
 
@@ -67,10 +68,8 @@ export const MapTools: React.FC = () => {
                             <MapIcon />
                         </IconButton>
                         <IconButton
-                            title="Basemap Selector"
-                            handleClick={() =>
-                                setShowBaseMapSelector(!showBaseMapSelector)
-                            }
+                            title="Legend"
+                            handleClick={() => setShowLegend(!showLegend)}
                         >
                             <MapIcon />
                         </IconButton>
@@ -92,14 +91,18 @@ export const MapTools: React.FC = () => {
                     />
                 </Card>
             )}
-            {showBaseMapSelector && (
-                <Card
-                    className="mt-1"
-                    handleClose={() => setShowBaseMapSelector(false)}
-                >
-                    <BasemapSelector
-                        style={selectedBasemap}
-                        handleStyleChange={handleStyleChange}
+            {showLegend && (
+                <Card className="mt-1" handleClose={() => setShowLegend(false)}>
+                    <Legend
+                        visibleLayers={visibleLayers}
+                        layerDefinitions={layerDefinitions}
+                        getLayerColor={getLayerColor as (id: string) => string}
+                        getLayerName={getLayerName as (id: string) => string}
+                        getLayerConfig={
+                            getLayerConfig as (
+                                id: string
+                            ) => null | LayerSpecification
+                        }
                     />
                 </Card>
             )}

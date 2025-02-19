@@ -54,3 +54,33 @@ div#tools {
     font-size: x-large;
     right: 3px;
 }
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes linear {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.animate-linear {
+    animation: linear 2s linear infinite;
+}
+
+input[type='checkbox'] {
+    accent-color: #4798e6;
+}

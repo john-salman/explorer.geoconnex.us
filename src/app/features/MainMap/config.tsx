@@ -1,6 +1,7 @@
 import {
     BasemapId,
     CustomListenerFunction,
+    LayerType,
     MainLayerDefinition,
     SourceConfig,
     Sources,
@@ -185,8 +186,8 @@ export const getLayerConfig = (
             return null;
         case SubLayerId.MainstemsSmall:
             return {
-                id: SubLayerId.MainstemsSmall, // Layer ID
-                type: 'line',
+                id: SubLayerId.MainstemsSmall,
+                type: LayerType.Line,
                 source: SourceId.Mainstems,
                 'source-layer': SourceId.Mainstems,
                 layout: {
@@ -196,21 +197,15 @@ export const getLayerConfig = (
                 },
                 filter: ['<', ['get', 'outlet_drainagearea_sqkm'], 160],
                 paint: {
-                    'line-opacity': [
-                        'step',
-                        ['zoom'],
-                        0.3, // If lower than 7
-                        7,
-                        0.8, // Default to 0.1
-                    ],
+                    'line-opacity': ['step', ['zoom'], 0.3, 7, 0.8],
                     'line-color': getLayerColor(SubLayerId.MainstemsSmall),
                     'line-width': 4,
                 },
             };
         case SubLayerId.MainstemsMedium:
             return {
-                id: SubLayerId.MainstemsMedium, // Layer ID
-                type: 'line',
+                id: SubLayerId.MainstemsMedium,
+                type: LayerType.Line,
                 source: SourceId.Mainstems,
                 'source-layer': SourceId.Mainstems,
                 layout: {
@@ -224,21 +219,15 @@ export const getLayerConfig = (
                     ['<', ['get', 'outlet_drainagearea_sqkm'], 1600],
                 ],
                 paint: {
-                    'line-opacity': [
-                        'step',
-                        ['zoom'],
-                        0.3, // If lower than 7
-                        7,
-                        0.8, // Default to 0.1
-                    ],
+                    'line-opacity': ['step', ['zoom'], 0.3, 7, 0.8],
                     'line-color': getLayerColor(SubLayerId.MainstemsMedium),
                     'line-width': 4,
                 },
             };
         case SubLayerId.MainstemsLarge:
             return {
-                id: SubLayerId.MainstemsLarge, // Layer ID
-                type: 'line',
+                id: SubLayerId.MainstemsLarge,
+                type: LayerType.Line,
                 source: SourceId.Mainstems,
                 'source-layer': SourceId.Mainstems,
                 layout: {
@@ -248,21 +237,15 @@ export const getLayerConfig = (
                 },
                 filter: ['>', ['get', 'outlet_drainagearea_sqkm'], 1600],
                 paint: {
-                    'line-opacity': [
-                        'step',
-                        ['zoom'],
-                        0.3, // If lower than 7
-                        7,
-                        0.8, // Default to 0.1
-                    ],
+                    'line-opacity': ['step', ['zoom'], 0.3, 7, 0.8],
                     'line-color': getLayerColor(SubLayerId.MainstemsLarge),
                     'line-width': 4,
                 },
             };
         case LayerId.MajorRivers:
             return {
-                id: LayerId.MajorRivers, // Layer ID
-                type: 'line',
+                id: LayerId.MajorRivers,
+                type: LayerType.Line,
                 source: SourceId.Mainstems,
                 'source-layer': SourceId.Mainstems,
                 filter: ['>=', ['get', 'outlet_drainagearea_sqkm'], 50000],
@@ -271,34 +254,22 @@ export const getLayerConfig = (
                     'line-join': 'round',
                 },
                 paint: {
-                    'line-opacity': [
-                        'step',
-                        ['zoom'],
-                        0.8, // If lower than 7
-                        7,
-                        0.1, // Default to 0.1
-                    ],
+                    'line-opacity': ['step', ['zoom'], 0.8, 7, 0.1],
                     'line-color': getLayerColor(LayerId.MajorRivers),
                     'line-width': 4,
                 },
             };
         case LayerId.HUC2Boundaries:
             return {
-                id: LayerId.HUC2Boundaries, // Layer ID
-                type: 'line',
+                id: LayerId.HUC2Boundaries,
+                type: LayerType.Line,
                 source: SourceId.HUC2Boundaries,
                 layout: {
                     'line-cap': 'round',
                     'line-join': 'round',
                 },
                 paint: {
-                    'line-opacity': [
-                        'step',
-                        ['zoom'],
-                        0.8, // If lower than 7
-                        7,
-                        0.1, // Default to 0.1
-                    ],
+                    'line-opacity': ['step', ['zoom'], 0.8, 7, 0.1],
                     'line-color': getLayerColor(LayerId.HUC2Boundaries),
                     'line-width': 2,
                 },
@@ -306,7 +277,7 @@ export const getLayerConfig = (
         case SubLayerId.HUC2BoundaryLabels:
             return {
                 id: SubLayerId.HUC2BoundaryLabels,
-                type: 'symbol',
+                type: LayerType.Symbol,
                 source: SourceId.HUC2Boundaries,
                 layout: {
                     'text-field': ['get', 'NAME'],
@@ -320,11 +291,10 @@ export const getLayerConfig = (
                     'text-opacity': ['step', ['zoom'], 1, 6, 0],
                 },
             };
-        // Utility layer to allow clicking on shape
         case SubLayerId.HUC2BoundaryFill:
             return {
                 id: SubLayerId.HUC2BoundaryFill,
-                type: 'fill',
+                type: LayerType.Fill,
                 source: SourceId.HUC2Boundaries,
                 paint: {
                     'fill-color': '#000',
@@ -332,19 +302,14 @@ export const getLayerConfig = (
                 },
             };
         case LayerId.AssociatedData:
-            return null; // Special case, no parent layer def
+            return null;
         case SubLayerId.AssociatedDataClusters:
             return {
                 id: SubLayerId.AssociatedDataClusters,
-                type: 'circle',
+                type: LayerType.Circle,
                 source: SourceId.AssociatedData,
                 filter: ['has', 'point_count'],
                 paint: {
-                    // Use step expressions (https://docs.mapbox.com/style-spec/reference/expressions/#step)
-                    // with three steps to implement three types of circles:
-                    //   * Blue, 20px circles when point count is less than 5
-                    //   * Yellow, 30px circles when point count is between 5 and 10
-                    //   * Pink, 40px circles when point count is greater than or equal to 10
                     'circle-color': getLayerColor(
                         SubLayerId.AssociatedDataClusters
                     ),
@@ -362,7 +327,7 @@ export const getLayerConfig = (
         case SubLayerId.AssociatedDataClusterCount:
             return {
                 id: SubLayerId.AssociatedDataClusterCount,
-                type: 'symbol',
+                type: LayerType.Symbol,
                 source: SourceId.AssociatedData,
                 filter: ['has', 'point_count'],
                 layout: {
@@ -382,7 +347,7 @@ export const getLayerConfig = (
         case SubLayerId.AssociatedDataUnclustered:
             return {
                 id: SubLayerId.AssociatedDataUnclustered,
-                type: 'circle',
+                type: LayerType.Circle,
                 source: SourceId.AssociatedData,
                 paint: {
                     'circle-color': getLayerColor(
@@ -410,7 +375,7 @@ export const getLayerConfig = (
         case LayerId.SpiderifyPoints:
             return {
                 id: LayerId.SpiderifyPoints,
-                type: 'symbol',
+                type: LayerType.Symbol,
                 source: SourceId.Spiderify,
                 filter: ['!', ['has', 'point_count']],
                 paint: {
@@ -420,9 +385,9 @@ export const getLayerConfig = (
                         ['linear'],
                         ['zoom'],
                         CLUSTER_TRANSITION_ZOOM,
-                        0, // Set opacity to 0 at zoom level 14
+                        0,
                         CLUSTER_TRANSITION_ZOOM + 0.01,
-                        ['get', 'isNotFiltered'], // Use the data property for zoom levels over 13
+                        ['get', 'isNotFiltered'],
                     ],
                 },
                 layout: {
@@ -630,22 +595,26 @@ export const layerDefinitions: MainLayerDefinition[] = [
     {
         id: LayerId.MajorRivers,
         controllable: true,
+        legend: true,
         config: getLayerConfig(LayerId.MajorRivers),
     },
     {
         id: LayerId.Mainstems,
         controllable: true,
+        legend: true,
         config: getLayerConfig(LayerId.Mainstems),
         subLayers: [
             {
                 id: SubLayerId.MainstemsSmall,
                 controllable: true,
+                legend: true,
                 config: getLayerConfig(SubLayerId.MainstemsSmall),
                 hoverFunction: getLayerHoverFunction(SubLayerId.MainstemsSmall),
             },
             {
                 id: SubLayerId.MainstemsMedium,
                 controllable: true,
+                legend: true,
                 config: getLayerConfig(SubLayerId.MainstemsMedium),
                 hoverFunction: getLayerHoverFunction(
                     SubLayerId.MainstemsMedium
@@ -654,6 +623,7 @@ export const layerDefinitions: MainLayerDefinition[] = [
             {
                 id: SubLayerId.MainstemsLarge,
                 controllable: true,
+                legend: true,
                 config: getLayerConfig(SubLayerId.MainstemsLarge),
                 hoverFunction: getLayerHoverFunction(SubLayerId.MainstemsLarge),
             },
@@ -662,16 +632,19 @@ export const layerDefinitions: MainLayerDefinition[] = [
     {
         id: LayerId.HUC2Boundaries,
         controllable: true,
+        legend: true,
         config: getLayerConfig(LayerId.HUC2Boundaries),
         subLayers: [
             {
                 id: SubLayerId.HUC2BoundaryLabels,
                 controllable: true,
+                legend: false,
                 config: getLayerConfig(SubLayerId.HUC2BoundaryLabels),
             },
             {
                 id: SubLayerId.HUC2BoundaryFill,
                 controllable: false,
+                legend: false,
                 config: getLayerConfig(SubLayerId.HUC2BoundaryFill),
                 hoverFunction: getLayerHoverFunction(
                     SubLayerId.HUC2BoundaryFill
@@ -682,11 +655,13 @@ export const layerDefinitions: MainLayerDefinition[] = [
     {
         id: LayerId.AssociatedData,
         controllable: false,
+        legend: false,
         config: getLayerConfig(LayerId.AssociatedData),
         subLayers: [
             {
                 id: SubLayerId.AssociatedDataClusters,
                 controllable: false,
+                legend: true,
                 config: getLayerConfig(SubLayerId.AssociatedDataClusters),
                 clickFunction: getLayerClickFunction(
                     SubLayerId.AssociatedDataClusters
@@ -701,11 +676,13 @@ export const layerDefinitions: MainLayerDefinition[] = [
             {
                 id: SubLayerId.AssociatedDataClusterCount,
                 controllable: false,
+                legend: false,
                 config: getLayerConfig(SubLayerId.AssociatedDataClusterCount),
             },
             {
                 id: SubLayerId.AssociatedDataUnclustered,
                 controllable: false,
+                legend: true,
                 config: getLayerConfig(SubLayerId.AssociatedDataUnclustered),
                 // hoverFunction: getLayerHoverFunction(
                 //     SubLayerId.AssociatedDataUnclustered
@@ -716,6 +693,7 @@ export const layerDefinitions: MainLayerDefinition[] = [
     {
         id: LayerId.SpiderifyPoints,
         controllable: false,
+        legend: true,
         config: getLayerConfig(LayerId.SpiderifyPoints),
         hoverFunction: getLayerHoverFunction(LayerId.SpiderifyPoints),
     },

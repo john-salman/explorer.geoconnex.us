@@ -12,7 +12,7 @@ const Button: React.FC<Props> = (props) => {
         <button
             onClick={handleClick}
             className={
-                'bg-blue-700 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded'
+                'bg-[#4798E6] hover:bg-[#5AA9F0] text-white font-bold py-2 px-4 rounded'
             }
         >
             {props.children}
