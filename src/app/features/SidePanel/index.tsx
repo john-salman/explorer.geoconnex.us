@@ -10,73 +10,56 @@ import { CSVDownload } from '@/app/features/SidePanel/CSVDownload';
 import IconButton from '@/app/components/common/IconButton';
 import MapIcon from '@/app/assets/icons/MapIcon';
 import TableIcon from '@/app/assets/icons/TableIcon';
+import Collapsible from '@/app/components/common/Collapsible';
 
-export const SidePanel: React.FC = () => {
+type Props = {
+    className: string;
+};
+
+export const SidePanel: React.FC<Props> = (props) => {
+    const { className } = props;
+
     const { datasets, view } = useSelector((state: RootState) => state.main);
 
     const dispatch: AppDispatch = useDispatch();
 
-    const [showSearch, setShowSearch] = useState(false);
-    const [showFilters, setShowFilters] = useState(false);
-
     return (
-        <div className="ml-[0.8rem] w-[24vw]">
-            <div className="mt-1">
-                <IconButton
-                    handleClick={() => dispatch(setView('map'))}
-                    className="mr-1"
+        <div className={`w-[24vw]`}>
+            <div className="border-b border-gray-300">
+                <button
+                    onClick={() => dispatch(setView('map'))}
+                    className={`${
+                        view === 'map' ? 'bg-[#46ab9d]' : 'bg-[#5fc0b1]'
+                    } hover:bg-[#46ab9d] text-white font-bold py-2 px-4 w-[50%]`}
                     disabled={view === 'map'}
                 >
-                    <MapIcon />
-                </IconButton>
-                <IconButton
-                    handleClick={() => dispatch(setView('table'))}
+                    Map
+                </button>
+                <button
+                    onClick={() => dispatch(setView('table'))}
                     disabled={
                         datasets.features.length === 0 || view === 'table'
                     }
+                    className={`${
+                        view === 'table' ? 'bg-[#46ab9d]' : 'bg-[#5fc0b1]'
+                    }  hover:enabled:bg-[#46ab9d] disabled:bg-[#5fc0b1] text-white font-bold py-2 px-4 w-[50%]`}
                 >
-                    <TableIcon />
-                </IconButton>
+                    Table
+                </button>
             </div>
             {/* Defined in global.css */}
             <div id="scrollable-sidepanel">
-                <div className="mt-1">
-                    {/* Special case: dont rerender and refetch results on hide/show */}
-                    <Card
-                        className={`${showSearch ? 'block' : 'hidden'}`}
-                        handleClose={() => setShowSearch(false)}
-                    >
-                        <Search />
-                    </Card>
-                    {!showSearch && (
-                        <IconButton
-                            handleClick={() => setShowSearch(true)}
-                            className="mr-1"
-                        >
-                            <MapIcon />
-                        </IconButton>
-                    )}
-                </div>
-                <div className="mt-1">
-                    {datasets.features.length > 0 && (
-                        <>
-                            {showFilters ? (
-                                <Card handleClose={() => setShowFilters(false)}>
-                                    <Filters />
-                                    <div className="mt-1">
-                                        <CSVDownload />
-                                    </div>
-                                </Card>
-                            ) : (
-                                <Button
-                                    handleClick={() => setShowFilters(true)}
-                                >
-                                    Show Filters
-                                </Button>
-                            )}
-                        </>
-                    )}
-                </div>
+                <Collapsible title="Search">
+                    <Search />
+                </Collapsible>
+                {datasets.features.length > 0 && (
+                    <Collapsible title="Filters">
+                        <Filters />
+                        <div className="mt-5">
+                            <CSVDownload />
+                        </div>
+                    </Collapsible>
+                )}
             </div>
         </div>
     );

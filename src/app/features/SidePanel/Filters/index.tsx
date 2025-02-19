@@ -6,6 +6,7 @@ export const Filters: React.FC = () => {
     return (
         <>
             <Variables />
+            <br />
             <TemporalCoverage />
         </>
     );

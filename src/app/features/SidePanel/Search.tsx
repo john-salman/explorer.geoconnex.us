@@ -173,7 +173,7 @@ const SearchComponent: React.FC = () => {
 
     return (
         <>
-            <div className="flex flex-col justify-center m-2 pb-1 border border-gray-500 rounded-lg shadow-lg">
+            <div className="bg-white flex flex-col justify-center m-1 pb-1 text-black border border-gray-500 rounded-lg shadow-lg">
                 <input
                     type="text"
                     value={query}
