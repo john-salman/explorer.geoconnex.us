@@ -22,6 +22,7 @@ import { Linear } from '@/app/assets/Linear';
 
 type Summary = {
     id: number;
+    length: number;
     total: number;
     variables: string;
     types: string;
@@ -88,12 +89,12 @@ const SearchComponent: React.FC = () => {
             > = await response.json();
 
             const datasets = feature.properties.datasets;
+            const length: number = feature.properties.lengthkm;
             if (datasets && datasets.length) {
                 const total = datasets.length;
                 const variables: string[] = [];
                 const types: string[] = [];
                 const techniques: string[] = [];
-
                 datasets.forEach((dataset) => {
                     const { variableMeasured, type, measurementTechnique } =
                         dataset;
@@ -114,6 +115,7 @@ const SearchComponent: React.FC = () => {
 
                 const summary: Summary = {
                     id,
+                    length,
                     total,
                     variables: variables.join(', '),
                     types: types.join(', '),
@@ -126,6 +128,7 @@ const SearchComponent: React.FC = () => {
                 // No datasets, add placeholder to prevent additional fetches
                 setSummary({
                     id,
+                    length,
                     total: 0,
                     variables: '',
                     types: '',
@@ -216,6 +219,10 @@ const SearchComponent: React.FC = () => {
                                             >
                                                 {/* showSummary confirms summary existence */}
                                                 <li className="list-disc list-inside break-words whitespace-normal">
+                                                    Length (km):{' '}
+                                                    {summary!.length}
+                                                </li>
+                                                <li className="list-disc list-inside break-words whitespace-normal">
                                                     Datasets: {summary!.total}
                                                 </li>
                                                 {summary!.types.length > 0 && (
@@ -239,9 +246,20 @@ const SearchComponent: React.FC = () => {
                                                 )}
                                             </ul>
                                         ) : (
-                                            <p className="mt-2 text-gray-500">
-                                                No Observations
-                                            </p>
+                                            <>
+                                                <ul
+                                                    key={`summary-${index}`}
+                                                    className="pl-4 mt-2"
+                                                >
+                                                    <li className="list-disc list-inside break-words whitespace-normal">
+                                                        Length (km):{' '}
+                                                        {summary!.length}
+                                                    </li>
+                                                </ul>
+                                                <p className="mt-2 text-gray-500">
+                                                    No Observations
+                                                </p>
+                                            </>
                                         ))}
                                 </li>
                             );
