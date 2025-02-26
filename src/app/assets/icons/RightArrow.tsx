@@ -1,6 +1,7 @@
 export const RightArrow: React.FC = () => {
     return (
         <svg
+            data-testid="right-arrow-icon"
             fill="#FFF"
             height="20px"
             width="20px"

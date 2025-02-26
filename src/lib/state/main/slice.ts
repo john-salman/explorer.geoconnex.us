@@ -8,7 +8,8 @@ import { GeoJSONFeature, LngLatBoundsLike } from 'mapbox-gl';
 import * as turf from '@turf/turf';
 
 type InitialState = {
-    selectedMainstemId: number | null;
+    showSidePanel: boolean;
+    selectedMainstemId: string | null;
     selectedMainstemBBOX: LngLatBoundsLike | null;
     hoverId: number | null;
     selectedData: Dataset | null;
@@ -41,6 +42,7 @@ type InitialState = {
 };
 
 const initialState: InitialState = {
+    showSidePanel: false,
     selectedMainstemId: null,
     selectedMainstemBBOX: null,
     hoverId: null,
@@ -98,6 +100,12 @@ export const mainSlice = createSlice({
     name: 'main',
     initialState: initialState,
     reducers: {
+        setShowSidePanel: (
+            state,
+            action: PayloadAction<InitialState['showSidePanel']>
+        ) => {
+            state.showSidePanel = action.payload;
+        },
         setSearchResultIds: (
             state,
             action: PayloadAction<InitialState['searchResultIds']>
@@ -161,36 +169,25 @@ export const mainSlice = createSlice({
 
                 // If filter exists apply it
 
-                // Check type
-                const isTypeSelected =
-                    !newFilter.selectedTypes ||
-                    newFilter.selectedTypes.length === 0 ||
-                    newFilter.selectedTypes.includes(type);
                 // Check variable measured
                 const isVariableSelected =
-                    !newFilter.selectedVariables ||
-                    newFilter.selectedVariables.length === 0 ||
+                    newFilter.selectedVariables === undefined ||
                     newFilter.selectedVariables.includes(
                         variableMeasured.split(' / ')[0]
                     );
 
                 // Check start of temporal coverages
                 const isStartDateValid =
-                    !newFilter.startTemporalCoverage ||
+                    newFilter.startTemporalCoverage === undefined ||
                     new Date(newFilter.startTemporalCoverage) <=
                         new Date(startDate);
                 // Check end of temporal coverages
                 const isEndDateValid =
-                    !newFilter.endTemporalCoverage ||
+                    newFilter.endTemporalCoverage === undefined ||
                     new Date(newFilter.endTemporalCoverage) >=
                         new Date(endDate);
 
-                return (
-                    isTypeSelected &&
-                    isVariableSelected &&
-                    isStartDateValid &&
-                    isEndDateValid
-                );
+                return isVariableSelected && isStartDateValid && isEndDateValid;
             });
 
             state.filteredDatasets = {
@@ -225,10 +222,16 @@ export const mainSlice = createSlice({
                         const datasets = transformDatasets(action.payload);
                         state.datasets = datasets;
                         state.filteredDatasets = datasets;
-                        const bbox = turf.bbox(
-                            action.payload
-                        ) as LngLatBoundsLike;
-                        state.selectedMainstemBBOX = bbox;
+                        const bufferedLine = turf.buffer(action.payload, 1, {
+                            units: 'kilometers',
+                        });
+                        if (bufferedLine) {
+                            const bbox = turf.bbox(
+                                bufferedLine
+                            ) as LngLatBoundsLike;
+
+                            state.selectedMainstemBBOX = bbox;
+                        }
                     }
                     return;
                 }
@@ -241,6 +244,7 @@ export const mainSlice = createSlice({
 });
 
 export const {
+    setShowSidePanel,
     setSearchResultIds,
     setSelectedMainstemId,
     setHoverId,

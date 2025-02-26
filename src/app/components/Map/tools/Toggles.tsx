@@ -24,7 +24,7 @@ export const Toggles: React.FC<Props> = (props) => {
                     key={`layer-control-${layer.id}`}
                     className="p-1 text-black"
                 >
-                    <div className="flex items-center justify-between w-[10vw]">
+                    <div className="flex items-center justify-between">
                         <label className="font-large mr-1">
                             <input
                                 type="checkbox"
@@ -51,7 +51,7 @@ export const Toggles: React.FC<Props> = (props) => {
                             .map((sublayer) => (
                                 <div
                                     key={`layer-control-${layer.id}-${sublayer.id}`}
-                                    className="ml-4 p-1 flex items-center justify-between w-[7vw]"
+                                    className="ml-4 p-1 flex items-center justify-between"
                                 >
                                     <label className="font-large mr-1">
                                         <input

@@ -1,12 +1,16 @@
 'use client';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { MainMap } from '@/app/features/MainMap';
-import store, { RootState } from '@/lib/state/store';
-import { MapProvider } from '@/app/contexts/MapContexts';
+import store, { AppDispatch, RootState } from '@/lib/state/store';
+import { MapProvider, useMap } from '@/app/contexts/MapContexts';
 import { MAP_ID as MAIN_MAP_ID } from '@/app/features/MainMap/config';
 import { SidePanel } from '@/app/features/SidePanel';
 import Table from '@/app/features/Table';
-import { MapTools } from './features/MapTools';
+import { MapTools } from '@/app/features/MapTools';
+import { useLayoutEffect } from 'react';
+import { setShowSidePanel } from '@/lib/state/main/slice';
+import IconButton from '@/app/components/common/IconButton';
+import { Hamburger } from '@/app/assets/icons/Hamburger';
 
 type Props = {
     accessToken: string;
@@ -15,21 +19,61 @@ type Props = {
 export const App: React.FC<Props> = (props) => {
     const { accessToken } = props;
 
-    const { view } = useSelector((state: RootState) => state.main);
+    const { view, showSidePanel } = useSelector(
+        (state: RootState) => state.main
+    );
+
+    const dispatch: AppDispatch = useDispatch();
+
+    const { map } = useMap(MAIN_MAP_ID);
+
+    useLayoutEffect(() => {
+        if (window.innerWidth > 1280) {
+            dispatch(setShowSidePanel(true));
+        }
+    }, [map]);
+
+    const handleSidePanelControlClick = () => {
+        dispatch(setShowSidePanel(true));
+    };
 
     return (
-        <div className="w-[100vw] h-[100vw] max-w-[100vw] max-h-[100vh] overflow-hidden">
-            <div id="sidePanel" className="fixed">
+        <div className="flex w-[100vw] h-[100vh] max-w-[100vw] max-h-[100vh] overflow-hidden">
+            <div id="side-panel-control" className={`fixed top-2 left-2`}>
+                {!showSidePanel && (
+                    <IconButton
+                        handleClick={() => handleSidePanelControlClick()}
+                    >
+                        <Hamburger />
+                    </IconButton>
+                )}
+            </div>
+            <div
+                id="side-panel"
+                className={`
+                      w-[70vw] lg:w-[45vw] xl:w-[30vw] 2xl:w-[20vw] 
+                     min-w-[300px] sm:min-w-[400px]
+                     max-w-[300px] sm:max-w-[400px]
+                     h-[88vh] lg:h-full
+                     flex overflow-hidden bg-primary
+                     m-2 lg:m-0
+                     rounded-lg lg:rounded-none
+                     ${showSidePanel ? 'block' : 'hidden'}`}
+            >
                 <SidePanel />
             </div>
-            <div id="map" className={`${view === 'map' ? 'block' : 'hidden'}`}>
+            <div
+                id="map"
+                className={`absolute  lg:relative
+                        ${view === 'map' ? 'block' : 'hidden'}  w-full`}
+            >
                 <MainMap accessToken={accessToken} />
             </div>
             <div
                 id="table"
-                className={`rounded-lg ml-auto max-w-[72vw] max-h-[96vh] mr-5 my-5 overflow-hidden ${
+                className={`overflow-hidden absolute xl:relative ${
                     view === 'table' ? 'block' : 'hidden'
-                }`}
+                } w-full`}
             >
                 <Table />
             </div>

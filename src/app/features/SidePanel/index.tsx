@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/lib/state/store';
-import { setView } from '@/lib/state/main/slice';
+import { setShowSidePanel, setView } from '@/lib/state/main/slice';
 import { useState } from 'react';
 import Card from '@/app/components/common/Card';
 import Button from '@/app/components/common/Button';
@@ -11,9 +11,10 @@ import IconButton from '@/app/components/common/IconButton';
 import MapIcon from '@/app/assets/icons/MapIcon';
 import TableIcon from '@/app/assets/icons/TableIcon';
 import Collapsible from '@/app/components/common/Collapsible';
+import CloseButton from '@/app/components/common/CloseButton';
 
 type Props = {
-    className: string;
+    className?: string;
 };
 
 export const SidePanel: React.FC<Props> = (props) => {
@@ -24,31 +25,54 @@ export const SidePanel: React.FC<Props> = (props) => {
     const dispatch: AppDispatch = useDispatch();
 
     return (
-        <div className={`w-[24vw]`}>
-            <div className="border-b border-gray-300">
-                <button
-                    onClick={() => dispatch(setView('map'))}
-                    className={`${
-                        view === 'map' ? 'bg-[#46ab9d]' : 'bg-[#5fc0b1]'
-                    } hover:bg-[#46ab9d] text-white font-bold py-2 px-4 w-[50%]`}
-                    disabled={view === 'map'}
+        <div className={`w-full mt-1`}>
+            <div className=" flex justify-between border-b border-gray-300 shadow-lg">
+                <div className="flex w-[60%]">
+                    <button
+                        onClick={() => dispatch(setView('map'))}
+                        className={`${
+                            view === 'map'
+                                ? 'bg-primary -mb-px border-b-transparent'
+                                : 'bg-primary-darker text-gray-200'
+                        } hover:bg-primary 
+                        border-t border-x border-white 
+                        py-3 px-4 mx-2 
+                        text-white hover:text-white font-bold 
+                        rounded-t-lg
+                        w-[50%] `}
+                    >
+                        Map
+                    </button>
+                    <button
+                        onClick={() => dispatch(setView('table'))}
+                        disabled={datasets.features.length === 0}
+                        className={`${
+                            view === 'table'
+                                ? 'bg-primary -mb-px border-b-transparent'
+                                : 'bg-primary-darker text-gray-200'
+                        } hover:enabled:bg-primary 
+                        disabled:opacity-60
+                        border-t border-x border-white
+                        py-3 px-4
+                      text-white hover::enabled:text-white font-bold 
+                        rounded-t-lg
+                        w-[50%]`}
+                    >
+                        Table
+                    </button>
+                </div>
+                <div
+                    id="side-panel-close"
+                    className="mr-1 text-white block lg:hidden"
                 >
-                    Map
-                </button>
-                <button
-                    onClick={() => dispatch(setView('table'))}
-                    disabled={
-                        datasets.features.length === 0 || view === 'table'
-                    }
-                    className={`${
-                        view === 'table' ? 'bg-[#46ab9d]' : 'bg-[#5fc0b1]'
-                    }  hover:enabled:bg-[#46ab9d] disabled:bg-[#5fc0b1] text-white font-bold py-2 px-4 w-[50%]`}
-                >
-                    Table
-                </button>
+                    <CloseButton
+                        handleClick={() => dispatch(setShowSidePanel(false))}
+                        className="text-white hover:text-gray-200 text-xl"
+                        closeIconClassName="w-10 h-10"
+                    />
+                </div>
             </div>
-            {/* Defined in global.css */}
-            <div id="scrollable-sidepanel">
+            <div id="scrollable-side-panel" className="overflow-y-auto">
                 <Collapsible title="Search">
                     <Search />
                 </Collapsible>

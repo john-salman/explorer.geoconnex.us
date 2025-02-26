@@ -15,7 +15,10 @@ const Card: React.FC<Props> = (props) => {
             <div className="relative bg-white rounded-lg shadow-lg p-6 w-[100%]">
                 {handleClose && (
                     <span className="absolute top-2 right-2">
-                        <CloseButton handleClick={handleClose} />
+                        <CloseButton
+                            handleClick={handleClose}
+                            className="text-gray-500 hover:text-gray-700 "
+                        />
                     </span>
                 )}
                 {props.children}

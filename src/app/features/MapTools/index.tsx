@@ -10,11 +10,17 @@ import {
     getLayerColor,
     getLayerName,
     getLayerConfig,
+    SubLayerId,
 } from '@/app/features/MainMap/config';
 import IconButton from '@/app/components/common/IconButton';
 import MapIcon from '@/app/assets/icons/MapIcon';
 import { Legend } from '@/app/components/Map/tools/Legend';
 import { LayerSpecification } from 'mapbox-gl';
+import { LayerIcon } from '@/app/assets/icons/LayerIcon';
+import { ControlsIcon } from '@/app/assets/icons/ControlsIcon';
+import { LegendIcon } from '@/app/assets/icons/LegendIcon';
+import Circle from '@/app/assets/icons/Circle';
+import { Marker } from '@/app/assets/icons/Marker';
 
 export const MapTools: React.FC = () => {
     const { visibleLayers } = useSelector((state: RootState) => state.main);
@@ -48,14 +54,14 @@ export const MapTools: React.FC = () => {
     };
 
     return (
-        <div className="mt-1">
-            <div className="flex space-x-2 flex-row-reverse">
+        <>
+            <div className="flex flex-col items-end lg:items-center lg:flex-row-reverse space-x-0 lg:space-x-2 space-y-2 lg:space-y-0">
                 <IconButton
                     title="Tools"
                     handleClick={() => setShowTools(!showTools)}
                     className="ml-2"
                 >
-                    <MapIcon />
+                    <ControlsIcon />
                 </IconButton>
                 {showTools && (
                     <>
@@ -65,13 +71,13 @@ export const MapTools: React.FC = () => {
                                 setShowLayerToggle(!showLayerToggle)
                             }
                         >
-                            <MapIcon />
+                            <LayerIcon />
                         </IconButton>
                         <IconButton
                             title="Legend"
                             handleClick={() => setShowLegend(!showLegend)}
                         >
-                            <MapIcon />
+                            <LegendIcon />
                         </IconButton>
                         {/* Add legend and other tools here */}
                     </>
@@ -79,7 +85,7 @@ export const MapTools: React.FC = () => {
             </div>
             {showLayerToggle && (
                 <Card
-                    className="mt-1"
+                    className="mt-2 w-60"
                     handleClose={() => setShowLayerToggle(false)}
                 >
                     <Toggles
@@ -92,7 +98,10 @@ export const MapTools: React.FC = () => {
                 </Card>
             )}
             {showLegend && (
-                <Card className="mt-1" handleClose={() => setShowLegend(false)}>
+                <Card
+                    className="mt-1 w-60"
+                    handleClose={() => setShowLegend(false)}
+                >
                     <Legend
                         visibleLayers={visibleLayers}
                         layerDefinitions={layerDefinitions}
@@ -103,9 +112,28 @@ export const MapTools: React.FC = () => {
                                 id: string
                             ) => null | LayerSpecification
                         }
+                        custom={
+                            <div className="-mt-2">
+                                Dataset Clusters
+                                <span className="flex">
+                                    <Circle color="#51bbd6" />
+                                    &lt; 5
+                                </span>
+                                <span className="flex">
+                                    <Circle color="#f1f075" />
+                                    &gt; 5
+                                </span>
+                                <span className="flex">
+                                    <Circle color="#f28cb1" />
+                                    &gt; 10
+                                </span>
+                                Dataset
+                                <Marker />
+                            </div>
+                        }
                     />
                 </Card>
             )}
-        </div>
+        </>
     );
 };

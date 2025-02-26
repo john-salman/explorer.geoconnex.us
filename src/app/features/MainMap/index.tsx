@@ -1,6 +1,6 @@
 'use client';
 import Map from '@/app/components/Map';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     layerDefinitions,
     sourceConfigs,
@@ -11,6 +11,8 @@ import {
     SourceId,
     BASEMAP,
     CLUSTER_TRANSITION_ZOOM,
+    MAINSTEMS_SELECTED_COLOR,
+    MAINSTEMS_SEARCH_COLOR,
 } from '@/app/features/MainMap/config';
 import { useMap } from '@/app/contexts/MapContexts';
 import { useDispatch, useSelector } from 'react-redux';
@@ -29,10 +31,15 @@ import {
     setLayerVisibility,
     setSelectedData,
     setSelectedMainstemBBOX,
+    setSelectedMainstemId,
 } from '@/lib/state/main/slice';
-import { spiderfyClusters, zoomToMainStem } from '@/app/features/MainMap/utils';
+import {
+    hasPeristentPopupOpenToThisItem,
+    spiderfyClusters,
+    zoomToMainStem,
+} from '@/app/features/MainMap/utils';
 import * as turf from '@turf/turf';
-import { FeatureCollection, Geometry } from 'geojson';
+import { Feature, FeatureCollection, Geometry, Point } from 'geojson';
 import { Dataset } from '@/app/types';
 
 const INITIAL_CENTER: [number, number] = [-98.5795, 39.8282];
@@ -44,7 +51,7 @@ type Props = {
 export const MainMap: React.FC<Props> = (props) => {
     const { accessToken } = props;
 
-    const { map, persistentPopup } = useMap(MAP_ID);
+    const { map, persistentPopup, hoverPopup } = useMap(MAP_ID);
     const dispatch: AppDispatch = useDispatch();
 
     const {
@@ -52,17 +59,19 @@ export const MainMap: React.FC<Props> = (props) => {
         filteredDatasets,
         visibleLayers,
         hoverId,
+        selectedMainstemId,
         selectedMainstemBBOX,
     } = useSelector((state: RootState) => state.main);
 
     const [reloadFlag, setReloadFlag] = useState(0);
 
+    const previousClusterIds = useRef('');
+
     useEffect(() => {
         if (!map) {
             return;
         }
-
-        const onZoom = () => {
+        const handleInitialZoom = () => {
             const zoom = map.getZoom();
             if (zoom >= 5) {
                 dispatch(
@@ -75,19 +84,28 @@ export const MainMap: React.FC<Props> = (props) => {
                 );
 
                 // Remove this listener after
-                map.off('zoom', onZoom);
+                map.off('zoom', handleInitialZoom);
             }
         };
 
-        map.on('zoom', onZoom);
-
-        map.on('zoom', () => {
+        const createSpiderifiedClusters = () => {
             const zoom = map.getZoom();
             if (zoom >= CLUSTER_TRANSITION_ZOOM) {
                 const features = map.queryRenderedFeatures({
                     layers: [SubLayerId.AssociatedDataClusters],
                 });
-                if (features.length) {
+                // Get unique ids
+                const uniqueIds = new Set(
+                    features.map((feature) => feature.properties!.cluster_id)
+                );
+                // Sort and convert to string
+                const clusterIds = Array.from(uniqueIds).sort().join();
+                // Check ids to prevent repeated spiderfy
+                if (
+                    features.length &&
+                    clusterIds !== previousClusterIds.current
+                ) {
+                    previousClusterIds.current = clusterIds;
                     const source = map.getSource(
                         SourceId.AssociatedData
                     ) as GeoJSONSource;
@@ -95,30 +113,27 @@ export const MainMap: React.FC<Props> = (props) => {
                     spiderfyClusters(map, source, features);
                 }
             }
-        });
+        };
 
-        map.on('drag', () => {
-            const zoom = map.getZoom();
-            if (zoom >= CLUSTER_TRANSITION_ZOOM) {
-                const features = map.queryRenderedFeatures({
-                    layers: [SubLayerId.AssociatedDataClusters],
-                });
+        map.on('zoom', handleInitialZoom);
 
-                if (features.length) {
-                    const source = map.getSource(
-                        SourceId.AssociatedData
-                    ) as GeoJSONSource;
-                    spiderfyClusters(map, source, features);
-                }
-            }
-        });
+        map.on('zoom', createSpiderifiedClusters);
 
-        map.loadImage('marker.png', (error, image) => {
+        map.on('drag', createSpiderifiedClusters);
+
+        // map.loadImage('marker.png', (error, image) => {
+        //     if (error) throw error;
+        //     if (!image) {
+        //         throw new Error('Image not found: marker.png');
+        //     }
+        //     map.addImage('observation-point', image);
+        // });
+        map.loadImage('dot-marker.png', (error, image) => {
             if (error) throw error;
             if (!image) {
-                throw new Error('Image not found: marker.png');
+                throw new Error('Image not found: dot-marker.png');
             }
-            map.addImage('observation-point', image, { sdf: true });
+            map.addImage('observation-point', image);
         });
 
         map.on('error', function (e) {
@@ -146,6 +161,7 @@ export const MainMap: React.FC<Props> = (props) => {
                     if (feature.properties) {
                         const id = feature.properties.id;
                         dispatch(fetchDatasets(id));
+                        dispatch(setSelectedMainstemId(id));
                         zoomToMainStem(map, id);
                     }
                 }
@@ -173,19 +189,19 @@ export const MainMap: React.FC<Props> = (props) => {
         map.on('style.load', () => {
             setReloadFlag(Math.random());
             if (!map.hasImage('observation-point')) {
-                map.loadImage('marker.png', (error, image) => {
+                map.loadImage('dot-marker.png', (error, image) => {
                     if (error) throw error;
                     if (!image) {
-                        throw new Error('Image not found: marker.png');
+                        throw new Error('Image not found: dot-marker.png');
                     }
-                    map.addImage('observation-point', image, { sdf: true });
+                    map.addImage('observation-point', image);
                 });
             }
         });
     }, [map]);
 
     useEffect(() => {
-        if (!map || !persistentPopup) {
+        if (!map || !persistentPopup || !hoverPopup) {
             return;
         }
 
@@ -195,7 +211,8 @@ export const MainMap: React.FC<Props> = (props) => {
                 if (persistentPopup.isOpen()) {
                     persistentPopup.remove();
                 }
-                const itemId = feature.properties.url;
+                hoverPopup.remove();
+                const itemId = feature.properties.distributionURL;
                 const latLng = extractLatLng(feature.properties.wkt);
                 const html = `<span style="color: black;" data-observationId="${itemId}"> 
                 <h6 style="font-weight:bold;">${
@@ -224,60 +241,123 @@ export const MainMap: React.FC<Props> = (props) => {
                 dispatch(setSelectedData(feature.properties as Dataset));
             }
         });
+
+        // Copy of hover listener, ensure popup updates when in a tight cluster
+        map.on('mousemove', LayerId.SpiderifyPoints, (e) => {
+            map.getCanvas().style.cursor = 'pointer';
+            const feature = e.features?.[0] as Feature<Point> | undefined;
+            if (feature && feature.properties) {
+                const itemId = feature.properties.distributionURL;
+                if (!hasPeristentPopupOpenToThisItem(persistentPopup, itemId)) {
+                    hoverPopup.remove();
+                    const variableMeasured =
+                        feature.properties.variableMeasured.split(' / ')[0];
+                    const offset: [number, number] = JSON.parse(
+                        feature.properties.iconOffset
+                    );
+                    const coordinates = feature.geometry.coordinates as [
+                        number,
+                        number
+                    ];
+                    const html = `<span style="color: black;"> 
+                                            <h6 style="font-weight:bold;">${feature.properties.siteName}</h6>
+                                            <div style="display:flex;"><strong>Type:</strong>&nbsp;<p>${variableMeasured} in ${feature.properties.variableUnit}</p></div>
+                                          </span>`;
+
+                    hoverPopup
+                        .setLngLat(coordinates)
+                        .setOffset(offset)
+                        .setHTML(html)
+                        .addTo(map);
+                }
+            }
+        });
     }, [map]);
 
     useEffect(() => {
         if (!map) {
             return;
         }
-
-        const opacityExpression: ExpressionSpecification = [
-            'case',
-            ['in', ['get', 'id'], ['literal', searchResultIds]],
-            1,
-            0.3, // Not In List
-        ];
+        if (searchResultIds.length) {
+            const opacityExpression: ExpressionSpecification = [
+                'case',
+                ['in', ['get', 'id'], ['literal', searchResultIds]],
+                1,
+                0.3, // Not In List
+            ];
+            map.setPaintProperty(
+                SubLayerId.MainstemsSmall,
+                'line-opacity',
+                opacityExpression
+            );
+            map.setPaintProperty(
+                SubLayerId.MainstemsMedium,
+                'line-opacity',
+                opacityExpression
+            );
+            map.setPaintProperty(
+                SubLayerId.MainstemsLarge,
+                'line-opacity',
+                opacityExpression
+            );
+        } else {
+            const opacityExpression: ExpressionSpecification = [
+                'step',
+                ['zoom'],
+                0.1,
+                7,
+                0.8,
+            ];
+            map.setPaintProperty(
+                SubLayerId.MainstemsSmall,
+                'line-opacity',
+                opacityExpression
+            );
+            map.setPaintProperty(
+                SubLayerId.MainstemsMedium,
+                'line-opacity',
+                opacityExpression
+            );
+            map.setPaintProperty(
+                SubLayerId.MainstemsLarge,
+                'line-opacity',
+                opacityExpression
+            );
+        }
 
         map.setPaintProperty(SubLayerId.MainstemsSmall, 'line-color', [
             'case',
             ['==', ['get', 'id'], String(hoverId)],
-            '#04BBDE',
+            MAINSTEMS_SELECTED_COLOR,
+            ['==', ['get', 'id'], selectedMainstemId],
+            MAINSTEMS_SELECTED_COLOR,
             ['in', ['get', 'id'], ['literal', searchResultIds]],
-            '#FAC60F',
+            MAINSTEMS_SEARCH_COLOR,
             getLayerColor(SubLayerId.MainstemsSmall), // Not In List
         ]);
-        map.setPaintProperty(
-            SubLayerId.MainstemsSmall,
-            'line-opacity',
-            opacityExpression
-        );
+
         map.setPaintProperty(SubLayerId.MainstemsMedium, 'line-color', [
             'case',
             ['==', ['get', 'id'], String(hoverId)],
-            '#04BBDE',
+            MAINSTEMS_SELECTED_COLOR,
+            ['==', ['get', 'id'], selectedMainstemId],
+            MAINSTEMS_SELECTED_COLOR,
             ['in', ['get', 'id'], ['literal', searchResultIds]],
-            '#FAC60F',
+            MAINSTEMS_SEARCH_COLOR,
             getLayerColor(SubLayerId.MainstemsMedium), // Not In List
         ]);
-        map.setPaintProperty(
-            SubLayerId.MainstemsMedium,
-            'line-opacity',
-            opacityExpression
-        );
+
         map.setPaintProperty(SubLayerId.MainstemsLarge, 'line-color', [
             'case',
             ['==', ['get', 'id'], String(hoverId)],
-            '#04BBDE',
+            MAINSTEMS_SELECTED_COLOR,
+            ['==', ['get', 'id'], selectedMainstemId],
+            MAINSTEMS_SELECTED_COLOR,
             ['in', ['get', 'id'], ['literal', searchResultIds]],
-            '#FAC60F',
+            MAINSTEMS_SEARCH_COLOR,
             getLayerColor(SubLayerId.MainstemsLarge), // Not In List
         ]);
-        map.setPaintProperty(
-            SubLayerId.MainstemsLarge,
-            'line-opacity',
-            opacityExpression
-        );
-    }, [searchResultIds, hoverId]);
+    }, [searchResultIds, selectedMainstemId, hoverId]);
 
     useEffect(() => {
         if (!map || !filteredDatasets) {

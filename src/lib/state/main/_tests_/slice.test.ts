@@ -30,7 +30,7 @@ describe('mainSlice', () => {
     });
 
     test('should handle setSelectedMainstemId', () => {
-        const selectedMainstemId = 1;
+        const selectedMainstemId = '';
         store.dispatch(setSelectedMainstemId(selectedMainstemId));
         const state = store.getState().main;
         expect(state.selectedMainstemId).toEqual(selectedMainstemId);

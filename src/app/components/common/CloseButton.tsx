@@ -1,33 +1,26 @@
+import { CloseIcon } from '@/app/assets/icons/CloseIcon';
 import React from 'react';
 
 type Props = {
     handleClick: () => void;
+    className?: string;
+    closeIconClassName?: string;
 };
 
 const CloseButton: React.FC<Props> = (props) => {
-    const { handleClick } = props;
+    const {
+        handleClick,
+        className = '',
+        closeIconClassName = 'w-6 h-6',
+    } = props;
 
     return (
         <button
             data-testid="close-button"
             onClick={handleClick}
-            className="text-gray-500 hover:text-gray-700 focus:outline-none"
+            className={`focus:outline-none ${className}`}
         >
-            <svg
-                data-testid="close-button-icon"
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-            >
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                />
-            </svg>
+            <CloseIcon className={closeIconClassName} />
         </button>
     );
 };

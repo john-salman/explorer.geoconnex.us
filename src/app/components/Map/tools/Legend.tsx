@@ -15,6 +15,8 @@ type Props = {
     getLayerConfig: (id: string) => null | LayerSpecification;
     visibleLayers: { [key in string]: boolean };
     layerDefinitions: MainLayerDefinition[];
+    symbols?: { [key in string]: React.ReactNode };
+    custom?: React.ReactNode;
 };
 
 export const Legend: React.FC<Props> = (props) => {
@@ -24,6 +26,8 @@ export const Legend: React.FC<Props> = (props) => {
         getLayerName,
         getLayerColor,
         getLayerConfig,
+        symbols = {},
+        custom = <></>,
     } = props;
 
     const renderSubLayers = (layer: MainLayerDefinition) => {
@@ -38,32 +42,37 @@ export const Legend: React.FC<Props> = (props) => {
                 return (
                     <div
                         key={`legend-entry-${layer.id}-${sublayer.id}`}
-                        className="ml-4 p-1 flex items-center w-[7vw]"
+                        className="ml-4 p-1 flex items-center"
                     >
                         {color && typeof color === 'string' && (
                             <div className="mr-1">
                                 {type === LayerType.Line && (
                                     <Line
-                                        key={`legend-entry-${layer.id}-${sublayer.id}-color`}
+                                        key={`legend-entry-${layer.id}-${sublayer.id}`}
                                         color={color}
                                     />
                                 )}
                                 {type === LayerType.Circle && (
                                     <Circle
-                                        key={`legend-entry-${layer.id}-${sublayer.id}-color`}
+                                        key={`legend-entry-${layer.id}-${sublayer.id}`}
                                         color={color}
                                     />
                                 )}
                                 {type === LayerType.Fill && (
                                     <Square
-                                        key={`legend-entry-${layer.id}-${sublayer.id}-color`}
+                                        key={`legend-entry-${layer.id}-${sublayer.id}`}
                                         color={color}
                                     />
                                 )}
-                                {type === LayerType.Symbol && (
-                                    // TODO: Handle symbol type
-                                    <div className="symbol-placeholder"></div>
-                                )}
+                                {type === LayerType.Symbol &&
+                                    symbols[sublayer.id] && (
+                                        // TODO: Handle symbol type
+                                        <span
+                                            key={`legend-entry-${layer.id}-${sublayer.id}`}
+                                        >
+                                            {symbols[sublayer.id]}
+                                        </span>
+                                    )}
                             </div>
                         )}
                         {getLayerName(sublayer.id)}
@@ -73,55 +82,65 @@ export const Legend: React.FC<Props> = (props) => {
     };
 
     const renderLayers = (layers: MainLayerDefinition[]) => {
-        return layers
-            .filter((layer) => layer.legend && visibleLayers[layer.id])
-            .map((layer) => {
-                const type = getLayerConfig(layer.id)?.type ?? 'none';
-                const color = getLayerColor(layer.id);
+        return layers.map((layer) => {
+            const type = getLayerConfig(layer.id)?.type ?? 'none';
+            const color = getLayerColor(layer.id);
 
-                return (
-                    <div
-                        key={`legend-entry-${layer.id}`}
-                        className="p-1 text-black"
-                    >
-                        <div className="flex items-center w-[10vw]">
+            return (
+                <div
+                    key={`legend-entry-${layer.id}`}
+                    className="p-1 text-black"
+                >
+                    {layer.legend && (
+                        <div className="flex items-center">
                             {color && typeof color === 'string' && (
                                 <div className="mr-1">
                                     {type === LayerType.Line && (
                                         <Line
-                                            key={`legend-entry-${layer.id}-color`}
+                                            key={`legend-entry-${layer.id}`}
                                             color={color}
                                         />
                                     )}
                                     {type === LayerType.Circle && (
                                         <Circle
-                                            key={`legend-entry-${layer.id}-color`}
+                                            key={`legend-entry-${layer.id}`}
                                             color={color}
                                         />
                                     )}
                                     {type === LayerType.Fill && (
                                         <Square
-                                            key={`legend-entry-${layer.id}-color`}
+                                            key={`legend-entry-${layer.id}`}
                                             color={color}
                                         />
                                     )}
-                                    {type === LayerType.Symbol && (
-                                        // TODO: Handle symbol type
-                                        <div className="symbol-placeholder"></div>
-                                    )}
+                                    {type === LayerType.Symbol &&
+                                        symbols[layer.id] && (
+                                            // TODO: Handle symbol type
+                                            <span
+                                                key={`legend-entry-${layer.id}`}
+                                            >
+                                                {symbols[layer.id]}
+                                            </span>
+                                        )}
                                 </div>
                             )}
                             {getLayerName(layer.id)}
                         </div>
-                        {layer.subLayers && renderSubLayers(layer)}
-                    </div>
-                );
-            });
+                    )}
+                    {layer.subLayers && renderSubLayers(layer)}
+                </div>
+            );
+        });
     };
 
     const renderLegend = useCallback(() => {
         return renderLayers(layerDefinitions);
     }, [layerDefinitions, visibleLayers]);
 
-    return <>{renderLegend()}</>;
+    return (
+        <>
+            {renderLegend()}
+            {custom}
+        </>
+    );
 };

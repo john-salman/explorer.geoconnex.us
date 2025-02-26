@@ -168,7 +168,7 @@ const SearchComponent: React.FC = () => {
 
     const handleClick = async (id: number) => {
         dispatch(fetchDatasets(id));
-        dispatch(setSelectedMainstemId(id));
+        dispatch(setSelectedMainstemId(String(id)));
     };
 
     return (
@@ -217,8 +217,7 @@ const SearchComponent: React.FC = () => {
                                             >
                                                 {/* showSummary confirms summary existence */}
                                                 <li className="list-disc list-inside break-words whitespace-normal">
-                                                    Observations:{' '}
-                                                    {summary!.total}
+                                                    Datasets: {summary!.total}
                                                 </li>
                                                 {summary!.types.length > 0 && (
                                                     <li className="list-disc list-inside break-words whitespace-normal">

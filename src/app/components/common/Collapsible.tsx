@@ -16,23 +16,23 @@ const Collapsible: React.FC<Props> = (props) => {
     };
 
     return (
-        <div className="bg-[#46AB9D] border-b text-white border-gray-300">
+        <div className="bg-primary border-b text-white border-gray-300">
             <button
-                className="w-full flex justify-between items-center p-4 bg-[#46AB9D] font-bold text-lg hover:bg-[#5AA9F0] focus:outline-none"
+                className="w-full flex justify-between items-center p-4 bg-primary font-bold text-lg hover:bg-primary-hover focus:outline-none"
                 onClick={toggleCollapse}
             >
                 {title}
-                {isOpen ? (
-                    <span className={`transform -rotate-90`}>
-                        <RightArrow />
-                    </span>
-                ) : (
-                    <span className={`transform rotate-90`}>
-                        <RightArrow />
-                    </span>
-                )}
+                <span
+                    data-testid="arrow-icon-wrapper"
+                    className={`transform ${
+                        isOpen ? '-rotate-90' : 'rotate-90'
+                    }`}
+                >
+                    <RightArrow />
+                </span>
             </button>
             <div
+                data-testid="collapsible-content"
                 className={`overflow-hidden transition-max-height duration-300 ${
                     isOpen ? 'max-h-screen' : 'max-h-0'
                 }`}

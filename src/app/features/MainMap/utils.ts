@@ -13,21 +13,22 @@ import * as turf from '@turf/turf';
 export const calculateSpiderfiedPositionsConcentricCircle = (
     count: number
 ): [number, number][] => {
-    const leavesSeparation = 300; // Separation between points in each circle
+    const leavesSeparation = 75; // Separation between points in each circle
     const baseOffset = [0, 0]; // Base offset
     const points: [number, number][] = []; // Array to store positions
-    const pointsPerCircle = 10; // Points per circle
 
     let circleIndex = 0;
+    let pointsInCurrentCircle = 10; // Points in the current circle
 
     for (let i = 0; i < count; i += 1) {
-        if (i % pointsPerCircle === 0 && i !== 0) {
-            circleIndex += 1; // Move to the next circle after every 10 points
+        if (i >= pointsInCurrentCircle * (circleIndex + 1)) {
+            circleIndex += 1; // Move to the next circle
+            pointsInCurrentCircle += 10; // Increase the number of points in the next circle
         }
 
         const radius = leavesSeparation * (circleIndex + 1); // Radius for the current circle
-        const theta = (2 * Math.PI) / pointsPerCircle; // Angle between each point in the circle
-        const angle = theta * (i % pointsPerCircle); // Current angle for the point
+        const theta = (2 * Math.PI) / pointsInCurrentCircle; // Angle between each point in the circle
+        const angle = theta * (i % pointsInCurrentCircle); // Current angle for the point
 
         const x = radius * Math.cos(angle) + baseOffset[0]; // X-coordinate of the point
         const y = radius * Math.sin(angle) + baseOffset[1]; // Y-coordinate of the point
@@ -40,7 +41,7 @@ export const calculateSpiderfiedPositionsConcentricCircle = (
 export const calculateSpiderfiedPositionsCircle = (
     count: number
 ): [number, number][] => {
-    const leavesSeparation = 350; // Separation between points
+    const leavesSeparation = 150; // Separation between points
     const leavesOffset = [0, 0]; // Base offset
     const points: [number, number][] = []; // Array to store positions
     const theta = (2 * Math.PI) / count; // Angle between each point
@@ -60,7 +61,7 @@ export const calculateSpiderfiedPositions = (
 ): [number, number][] => {
     const legLengthStart = 100; // Initial leg length of the spiral
     const legLengthFactor = 100; // Factor for increasing the leg length
-    const leavesSeparation = 500; // Separation between points
+    const leavesSeparation = 200; // Separation between points
     const leavesOffset = [0, 0]; // Base offset
     const points: [number, number][] = []; // Array to store positions
     let legLength = legLengthStart; // Current leg length
@@ -158,7 +159,7 @@ export const spiderfyClusters = async (
                 );
             }
         });
-
+        console.log('totalLeaves', totalLeaves);
         const spiderfySource = map.getSource(
             SourceId.Spiderify
         ) as GeoJSONSource;
