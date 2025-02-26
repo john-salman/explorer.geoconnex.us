@@ -121,13 +121,6 @@ export const MainMap: React.FC<Props> = (props) => {
 
         map.on('drag', createSpiderifiedClusters);
 
-        // map.loadImage('marker.png', (error, image) => {
-        //     if (error) throw error;
-        //     if (!image) {
-        //         throw new Error('Image not found: marker.png');
-        //     }
-        //     map.addImage('observation-point', image);
-        // });
         map.loadImage('dot-marker.png', (error, image) => {
             if (error) throw error;
             if (!image) {

@@ -66,7 +66,6 @@ export const Legend: React.FC<Props> = (props) => {
                                 )}
                                 {type === LayerType.Symbol &&
                                     symbols[sublayer.id] && (
-                                        // TODO: Handle symbol type
                                         <span
                                             key={`legend-entry-${layer.id}-${sublayer.id}`}
                                         >
@@ -115,7 +114,6 @@ export const Legend: React.FC<Props> = (props) => {
                                     )}
                                     {type === LayerType.Symbol &&
                                         symbols[layer.id] && (
-                                            // TODO: Handle symbol type
                                             <span
                                                 key={`legend-entry-${layer.id}`}
                                             >
