@@ -478,7 +478,6 @@ export const getLayerHoverFunction = (
             case LayerId.SpiderifyPoints:
                 return (e) => {
                     map.getCanvas().style.cursor = 'pointer';
-                    console.log('e', Math.random(), e);
                     const feature = e.features?.[0] as
                         | Feature<Point>
                         | undefined;

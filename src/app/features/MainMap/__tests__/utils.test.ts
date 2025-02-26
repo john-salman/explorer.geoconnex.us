@@ -23,7 +23,7 @@ describe('MainMap: utils', () => {
 
     test('calculateSpiderfiedPositionsCircle: should return correct positions for 1 point', () => {
         const result = calculateSpiderfiedPositionsCircle(1);
-        expect(result).toEqual([[150, 0]]);
+        expect(result).toEqual([[75, 0]]);
     });
 
     test('calculateSpiderfiedPositionsCircle: should return correct positions for 10 points', () => {
