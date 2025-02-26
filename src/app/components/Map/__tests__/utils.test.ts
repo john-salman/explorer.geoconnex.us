@@ -101,6 +101,7 @@ describe('Map Component: utils', () => {
             {
                 id: 'layer1',
                 controllable: true,
+                legend: false,
                 config: { id: 'layer1', type: 'fill', source: 'source1' },
             },
         ];
@@ -117,11 +118,13 @@ describe('Map Component: utils', () => {
             {
                 id: 'layer1',
                 controllable: true,
+                legend: false,
                 config: null,
                 subLayers: [
                     {
                         id: 'sublayer1',
                         controllable: true,
+                        legend: false,
                         config: {
                             id: 'sublayer1',
                             type: 'fill',
@@ -144,6 +147,7 @@ describe('Map Component: utils', () => {
             {
                 id: 'layer1',
                 controllable: true,
+                legend: false,
                 config: { id: 'layer1', type: 'fill', source: 'source1' },
                 hoverFunction: jest.fn(() => jest.fn()),
             },
@@ -166,11 +170,13 @@ describe('Map Component: utils', () => {
             {
                 id: 'layer1',
                 controllable: true,
+                legend: false,
                 config: null,
                 subLayers: [
                     {
                         id: 'sublayer1',
                         controllable: true,
+                        legend: false,
                         config: {
                             id: 'sublayer1',
                             type: 'fill',
@@ -199,6 +205,7 @@ describe('Map Component: utils', () => {
             {
                 id: 'layer1',
                 controllable: true,
+                legend: false,
                 config: { id: 'layer1', type: 'fill', source: 'source1' },
                 hoverFunction: jest.fn(() => jest.fn()),
                 customHoverExitFunction: jest.fn(() => jest.fn()),
@@ -222,11 +229,13 @@ describe('Map Component: utils', () => {
             {
                 id: 'layer1',
                 controllable: true,
+                legend: false,
                 config: null,
                 subLayers: [
                     {
                         id: 'sublayer1',
                         controllable: true,
+                        legend: false,
                         config: {
                             id: 'sublayer1',
                             type: 'fill',
@@ -256,6 +265,7 @@ describe('Map Component: utils', () => {
             {
                 id: 'layer1',
                 controllable: true,
+                legend: false,
                 config: { id: 'layer1', type: 'fill', source: 'source1' },
                 clickFunction: jest.fn(() => jest.fn()),
             },
@@ -273,11 +283,13 @@ describe('Map Component: utils', () => {
             {
                 id: 'layer1',
                 controllable: true,
+                legend: false,
                 config: null,
                 subLayers: [
                     {
                         id: 'sublayer1',
                         controllable: true,
+                        legend: false,
                         config: {
                             id: 'sublayer1',
                             type: 'fill',
