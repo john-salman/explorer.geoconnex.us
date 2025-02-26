@@ -1,15 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/lib/state/store';
 import { setShowSidePanel, setView } from '@/lib/state/main/slice';
-import { useState } from 'react';
-import Card from '@/app/components/common/Card';
-import Button from '@/app/components/common/Button';
 import Search from '@/app/features/SidePanel/Search';
 import { Filters } from '@/app/features/SidePanel/Filters';
 import { CSVDownload } from '@/app/features/SidePanel/CSVDownload';
-import IconButton from '@/app/components/common/IconButton';
-import MapIcon from '@/app/assets/icons/MapIcon';
-import TableIcon from '@/app/assets/icons/TableIcon';
 import Collapsible from '@/app/components/common/Collapsible';
 import CloseButton from '@/app/components/common/CloseButton';
 

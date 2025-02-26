@@ -22,8 +22,6 @@ import {
     GeoJSONSource,
     LngLatBoundsLike,
     MapMouseEvent,
-    NavigationControl,
-    ScaleControl,
 } from 'mapbox-gl';
 import { extractLatLng } from '@/lib/state/utils';
 import {

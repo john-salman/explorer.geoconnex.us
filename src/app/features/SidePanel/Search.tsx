@@ -18,7 +18,6 @@ import {
 } from '@/lib/state/main/slice';
 import { defaultGeoJson } from '@/lib/state/utils';
 import { Dataset, MainstemData } from '@/app/types';
-import { GeoJSONFeature } from 'mapbox-gl';
 import { Linear } from '@/app/assets/Linear';
 
 type Summary = {

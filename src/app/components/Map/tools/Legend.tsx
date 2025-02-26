@@ -1,11 +1,7 @@
 import Circle from '@/app/assets/icons/Circle';
 import Line from '@/app/assets/icons/Line';
 import Square from '@/app/assets/icons/Square';
-import {
-    LayerDefinition,
-    LayerType,
-    MainLayerDefinition,
-} from '@/app/components/Map/types';
+import { LayerType, MainLayerDefinition } from '@/app/components/Map/types';
 import { LayerSpecification } from 'mapbox-gl';
 import { useCallback } from 'react';
 

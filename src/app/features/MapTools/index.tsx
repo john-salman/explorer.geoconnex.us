@@ -10,10 +10,8 @@ import {
     getLayerColor,
     getLayerName,
     getLayerConfig,
-    SubLayerId,
 } from '@/app/features/MainMap/config';
 import IconButton from '@/app/components/common/IconButton';
-import MapIcon from '@/app/assets/icons/MapIcon';
 import { Legend } from '@/app/components/Map/tools/Legend';
 import { LayerSpecification } from 'mapbox-gl';
 import { LayerIcon } from '@/app/assets/icons/LayerIcon';
