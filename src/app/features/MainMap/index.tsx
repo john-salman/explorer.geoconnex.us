@@ -13,6 +13,7 @@ import {
     CLUSTER_TRANSITION_ZOOM,
     MAINSTEMS_SELECTED_COLOR,
     MAINSTEMS_SEARCH_COLOR,
+    MAINSTEM_OPACITY_EXPRESSION,
 } from '@/app/features/MainMap/config';
 import { useMap } from '@/app/contexts/MapContexts';
 import { useDispatch, useSelector } from 'react-redux';
@@ -153,7 +154,6 @@ export const MainMap: React.FC<Props> = (props) => {
                         const id = feature.properties.id;
                         dispatch(fetchDatasets(id));
                         dispatch(setSelectedMainstemId(id));
-                        zoomToMainStem(map, id);
                     }
                 }
             }
@@ -269,6 +269,7 @@ export const MainMap: React.FC<Props> = (props) => {
         if (!map) {
             return;
         }
+        // If actively searching
         if (searchResultIds.length) {
             const opacityExpression: ExpressionSpecification = [
                 'case',
@@ -291,28 +292,22 @@ export const MainMap: React.FC<Props> = (props) => {
                 'line-opacity',
                 opacityExpression
             );
+            // Otherwise reset to original expression
         } else {
-            const opacityExpression: ExpressionSpecification = [
-                'step',
-                ['zoom'],
-                0.1,
-                7,
-                0.8,
-            ];
             map.setPaintProperty(
                 SubLayerId.MainstemsSmall,
                 'line-opacity',
-                opacityExpression
+                MAINSTEM_OPACITY_EXPRESSION
             );
             map.setPaintProperty(
                 SubLayerId.MainstemsMedium,
                 'line-opacity',
-                opacityExpression
+                MAINSTEM_OPACITY_EXPRESSION
             );
             map.setPaintProperty(
                 SubLayerId.MainstemsLarge,
                 'line-opacity',
-                opacityExpression
+                MAINSTEM_OPACITY_EXPRESSION
             );
         }
 

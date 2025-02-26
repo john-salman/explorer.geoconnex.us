@@ -1,6 +1,6 @@
 'use client';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { defaultGeoJson, transformDatasets } from '../utils';
+import { defaultGeoJson, getMainstemBuffer, transformDatasets } from '../utils';
 import { FeatureCollection, Geometry } from 'geojson';
 import { LayerId, SubLayerId } from '@/app/features/MainMap/config';
 import { Dataset } from '@/app/types';
@@ -219,12 +219,16 @@ export const mainSlice = createSlice({
                 (state, action: PayloadAction<GeoJSONFeature>) => {
                     state.status = 'succeeded';
                     if (action.payload) {
-                        const datasets = transformDatasets(action.payload);
-                        state.datasets = datasets;
-                        state.filteredDatasets = datasets;
-                        const bufferedLine = turf.buffer(action.payload, 1, {
-                            units: 'kilometers',
-                        });
+                        // Get an appropriate buffer size based on drainage area
+                        const buffer = getMainstemBuffer(action.payload);
+                        // Buffer line to better fit feature to screen
+                        const bufferedLine = turf.buffer(
+                            action.payload,
+                            buffer,
+                            {
+                                units: 'kilometers',
+                            }
+                        );
                         if (bufferedLine) {
                             const bbox = turf.bbox(
                                 bufferedLine
@@ -232,6 +236,10 @@ export const mainSlice = createSlice({
 
                             state.selectedMainstemBBOX = bbox;
                         }
+                        // Transform datasets into a new feature collection
+                        const datasets = transformDatasets(action.payload);
+                        state.datasets = datasets;
+                        state.filteredDatasets = datasets;
                     }
                     return;
                 }

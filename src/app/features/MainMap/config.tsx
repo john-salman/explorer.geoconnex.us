@@ -9,6 +9,7 @@ import {
 import { Feature, Point } from 'geojson';
 import {
     DataDrivenPropertyValueSpecification,
+    ExpressionSpecification,
     GeoJSONSource,
     LayerSpecification,
     Map,
@@ -57,6 +58,16 @@ export const allLayerIds = [
 ];
 
 export const CLUSTER_TRANSITION_ZOOM = 14;
+export const MAINSTEM_DRAINAGE_SMALL = 160;
+export const MAINSTEM_DRAINAGE_MEDIUM = 1600;
+
+export const MAINSTEM_OPACITY_EXPRESSION: ExpressionSpecification = [
+    'step',
+    ['zoom'],
+    0.3,
+    6,
+    0.8,
+];
 
 /**********************************************************************
  * Define the various datasources this map will use
@@ -207,9 +218,13 @@ export const getLayerConfig = (
                     'line-join': 'round',
                     visibility: 'none',
                 },
-                filter: ['<', ['get', 'outlet_drainagearea_sqkm'], 160],
+                filter: [
+                    '<',
+                    ['get', 'outlet_drainagearea_sqkm'],
+                    MAINSTEM_DRAINAGE_SMALL,
+                ],
                 paint: {
-                    'line-opacity': ['step', ['zoom'], 0.3, 7, 0.8],
+                    'line-opacity': MAINSTEM_OPACITY_EXPRESSION,
                     'line-color': getLayerColor(SubLayerId.MainstemsSmall),
                     'line-width': 4,
                 },
@@ -227,11 +242,19 @@ export const getLayerConfig = (
                 },
                 filter: [
                     'all',
-                    ['>=', ['get', 'outlet_drainagearea_sqkm'], 160],
-                    ['<', ['get', 'outlet_drainagearea_sqkm'], 1600],
+                    [
+                        '>=',
+                        ['get', 'outlet_drainagearea_sqkm'],
+                        MAINSTEM_DRAINAGE_SMALL,
+                    ],
+                    [
+                        '<',
+                        ['get', 'outlet_drainagearea_sqkm'],
+                        MAINSTEM_DRAINAGE_MEDIUM,
+                    ],
                 ],
                 paint: {
-                    'line-opacity': ['step', ['zoom'], 0.3, 7, 0.8],
+                    'line-opacity': MAINSTEM_OPACITY_EXPRESSION,
                     'line-color': getLayerColor(SubLayerId.MainstemsMedium),
                     'line-width': 4,
                 },
@@ -247,9 +270,13 @@ export const getLayerConfig = (
                     'line-join': 'round',
                     visibility: 'none',
                 },
-                filter: ['>', ['get', 'outlet_drainagearea_sqkm'], 1600],
+                filter: [
+                    '>',
+                    ['get', 'outlet_drainagearea_sqkm'],
+                    MAINSTEM_DRAINAGE_MEDIUM,
+                ],
                 paint: {
-                    'line-opacity': ['step', ['zoom'], 0.3, 7, 0.8],
+                    'line-opacity': MAINSTEM_OPACITY_EXPRESSION,
                     'line-color': getLayerColor(SubLayerId.MainstemsLarge),
                     'line-width': 4,
                 },
@@ -544,6 +571,13 @@ export const getLayerCustomHoverExitFunction = (
                 return () => {
                     hoverOnCluster = false;
                 };
+            case LayerId.SpiderifyPoints:
+                return () => {
+                    map.getCanvas().style.cursor = '';
+                    hoverPopup.remove();
+                    // Remove offset from shared object
+                    hoverPopup.setOffset(0);
+                };
             default:
                 return (e) => {
                     console.log('Hover Exit Event Triggered: ', e);
@@ -551,8 +585,6 @@ export const getLayerCustomHoverExitFunction = (
                     console.log('Available Popups: ');
                     console.log('Hover: ', hoverPopup);
                     console.log('Persistent: ', persistentPopup);
-
-                    map.getCanvas().style.cursor = 'pointer';
                 };
         }
     };
@@ -721,6 +753,9 @@ export const layerDefinitions: MainLayerDefinition[] = [
         legend: true,
         config: getLayerConfig(LayerId.SpiderifyPoints),
         hoverFunction: getLayerHoverFunction(LayerId.SpiderifyPoints),
+        customHoverExitFunction: getLayerCustomHoverExitFunction(
+            LayerId.SpiderifyPoints
+        ),
     },
 
     // {

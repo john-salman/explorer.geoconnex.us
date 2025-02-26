@@ -65,15 +65,23 @@ export const MapTools: React.FC = () => {
                     <>
                         <IconButton
                             title="Layer Toggles"
-                            handleClick={() =>
-                                setShowLayerToggle(!showLayerToggle)
-                            }
+                            handleClick={() => {
+                                if (showLegend) {
+                                    setShowLegend(false);
+                                }
+                                setShowLayerToggle(!showLayerToggle);
+                            }}
                         >
                             <LayerIcon />
                         </IconButton>
                         <IconButton
                             title="Legend"
-                            handleClick={() => setShowLegend(!showLegend)}
+                            handleClick={() => {
+                                if (showLayerToggle) {
+                                    setShowLayerToggle(false);
+                                }
+                                setShowLegend(!showLegend);
+                            }}
                         >
                             <LegendIcon />
                         </IconButton>
