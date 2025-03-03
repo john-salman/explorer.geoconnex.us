@@ -6,6 +6,7 @@ import { Filters } from '@/app/features/SidePanel/Filters';
 import { CSVDownload } from '@/app/features/SidePanel/CSVDownload';
 import Collapsible from '@/app/components/common/Collapsible';
 import CloseButton from '@/app/components/common/CloseButton';
+import { Summary } from '@/app/features/SidePanel//Summary';
 
 type Props = {
     className?: string;
@@ -14,13 +15,26 @@ type Props = {
 export const SidePanel: React.FC<Props> = (props) => {
     const { className } = props;
 
-    const { datasets, view } = useSelector((state: RootState) => state.main);
+    const { datasets, view, selectedSummary } = useSelector(
+        (state: RootState) => state.main
+    );
 
     const dispatch: AppDispatch = useDispatch();
 
     return (
         <div className="w-full mt-1">
-            <div className=" flex justify-between border-b border-gray-300 shadow-lg">
+            {/* <Image
+                src={logo}
+                alt="Internet of Water logo"
+                layout="responsive"
+                style={{
+                    marginLeft: '1rem',
+                    width: '60%',
+                    height: 'auto',
+                }}
+            /> */}
+
+            <div className="mt-1 flex justify-between border-b border-gray-300 shadow-lg">
                 <div className="flex w-[60%]">
                     <button
                         onClick={() => dispatch(setView('map'))}
@@ -61,7 +75,7 @@ export const SidePanel: React.FC<Props> = (props) => {
                 >
                     <CloseButton
                         handleClick={() => dispatch(setShowSidePanel(false))}
-                        className="text-gray-900 hover:text-gray-200 text-lg"
+                        className="text-gray-900 hover:text-gray-700 text-lg"
                         closeIconClassName="w-10 h-10"
                     />
                 </div>
@@ -73,10 +87,17 @@ export const SidePanel: React.FC<Props> = (props) => {
                 <Collapsible title="Search">
                     <Search />
                 </Collapsible>
+                {selectedSummary && (
+                    <Collapsible title="Summary" open={true}>
+                        <div className="pb-2">
+                            <Summary summary={selectedSummary} />
+                        </div>
+                    </Collapsible>
+                )}
                 {datasets.features.length > 0 && (
                     <Collapsible title="Filters">
                         <Filters />
-                        <div className="mt-5">
+                        <div className="mt-5 mb-2">
                             <CSVDownload />
                         </div>
                     </Collapsible>

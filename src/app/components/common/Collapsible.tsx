@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 
 type Props = {
     title: string;
+    open?: boolean;
     children: React.ReactNode;
 };
 
 const Collapsible: React.FC<Props> = (props) => {
-    const { title } = props;
+    const { title, open = false } = props;
 
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(open);
 
     const toggleCollapse = () => {
         setIsOpen(!isOpen);
@@ -37,7 +38,7 @@ const Collapsible: React.FC<Props> = (props) => {
                     isOpen ? 'max-h-screen' : 'max-h-0'
                 }`}
             >
-                <div className="p-4">{props.children}</div>
+                <div className="px-4">{props.children}</div>
             </div>
         </div>
     );

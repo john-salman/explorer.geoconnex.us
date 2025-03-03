@@ -73,7 +73,7 @@ export const App: React.FC<Props> = (props) => {
             </div>
             <div
                 id="table"
-                className={`overflow-hidden absolute xl:relative ${
+                className={`overflow-hidden absolute lg:relative ${
                     view === 'table' ? 'block' : 'hidden'
                 } w-full`}
             >

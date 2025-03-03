@@ -40,6 +40,7 @@ export enum LayerId {
     MajorRivers = 'major-rivers',
     AssociatedData = 'associated-data',
     SpiderifyPoints = 'spiferified-clusters',
+    MainstemsHighlight = 'mainstems-highlight',
 }
 
 export enum SubLayerId {
@@ -60,6 +61,9 @@ export const allLayerIds = [
 export const CLUSTER_TRANSITION_ZOOM = 14;
 export const MAINSTEM_DRAINAGE_SMALL = 160;
 export const MAINSTEM_DRAINAGE_MEDIUM = 1600;
+export const MAINSTEM_SMALL_LINE_WIDTH = 3;
+export const MAINSTEM_MEDIUM_LINE_WIDTH = 4;
+export const MAINSTEM_LARGE_LINE_WIDTH = 6;
 
 export const MAINSTEM_OPACITY_EXPRESSION: ExpressionSpecification = [
     'step',
@@ -226,7 +230,7 @@ export const getLayerConfig = (
                 paint: {
                     'line-opacity': MAINSTEM_OPACITY_EXPRESSION,
                     'line-color': getLayerColor(SubLayerId.MainstemsSmall),
-                    'line-width': 2,
+                    'line-width': MAINSTEM_SMALL_LINE_WIDTH,
                 },
             };
         case SubLayerId.MainstemsMedium:
@@ -256,7 +260,7 @@ export const getLayerConfig = (
                 paint: {
                     'line-opacity': MAINSTEM_OPACITY_EXPRESSION,
                     'line-color': getLayerColor(SubLayerId.MainstemsMedium),
-                    'line-width': 4,
+                    'line-width': MAINSTEM_MEDIUM_LINE_WIDTH,
                 },
             };
         case SubLayerId.MainstemsLarge:
@@ -271,14 +275,33 @@ export const getLayerConfig = (
                     visibility: 'none',
                 },
                 filter: [
-                    '>',
+                    '>=',
                     ['get', 'outlet_drainagearea_sqkm'],
                     MAINSTEM_DRAINAGE_MEDIUM,
                 ],
                 paint: {
                     'line-opacity': MAINSTEM_OPACITY_EXPRESSION,
                     'line-color': getLayerColor(SubLayerId.MainstemsLarge),
-                    'line-width': 6,
+                    'line-width': MAINSTEM_LARGE_LINE_WIDTH,
+                },
+            };
+        case LayerId.MainstemsHighlight:
+            return {
+                id: LayerId.MainstemsHighlight,
+                type: LayerType.Line,
+                source: SourceId.Mainstems,
+                'source-layer': SourceId.Mainstems,
+                // Filter all features out by default
+                filter: ['==', ['get', 'id'], null],
+                layout: {
+                    'line-cap': 'round',
+                    'line-join': 'round',
+                    visibility: 'visible',
+                },
+                paint: {
+                    'line-width': 12,
+                    'line-blur': 3,
+                    'line-color': MAINSTEMS_SELECTED_COLOR,
                 },
             };
         case LayerId.MajorRivers:
@@ -528,7 +551,9 @@ export const getLayerHoverFunction = (
                                 .coordinates as [number, number];
                             const html = `<span style="color: black;"> 
                                 <h6 style="font-weight:bold;">${feature.properties.siteName}</h6>
-                                <div style="display:flex;"><strong>Type:</strong>&nbsp;<p>${variableMeasured} in ${feature.properties.variableUnit}</p></div>
+                                <div style="display:flex;">
+                                    <strong>Type:</strong>&nbsp;<p>${variableMeasured} in ${feature.properties.variableUnit}</p>
+                                </div>
                               </span>`;
 
                             hoverPopup
@@ -551,8 +576,7 @@ export const getLayerHoverFunction = (
                         | Feature<LineString>
                         | undefined;
                     const zoom = map.getZoom();
-                    console.log('e', e, zoom);
-                    if (feature && feature.properties) {
+                    if (feature && feature.properties && zoom < 7) {
                         const name = feature.properties.NAME;
                         map.setPaintProperty(
                             SubLayerId.HUC2BoundaryLabels,
@@ -659,9 +683,11 @@ export const getLayerMouseMoveFunction = (
                             const coordinates = feature.geometry
                                 .coordinates as [number, number];
                             const html = `<span style="color: black;"> 
-                                                                <h6 style="font-weight:bold;">${feature.properties.siteName}</h6>
-                                                                <div style="display:flex;"><strong>Type:</strong>&nbsp;<p>${variableMeasured} in ${feature.properties.variableUnit}</p></div>
-                                                              </span>`;
+                                            <h6 style="font-weight:bold;">${feature.properties.siteName}</h6>
+                                            <div style="display:flex;">
+                                                <strong>Type:</strong>&nbsp;<p>${variableMeasured} in ${feature.properties.variableUnit}</p>
+                                        </div>
+                                        </span>`;
 
                             hoverPopup
                                 .setLngLat(coordinates)
@@ -744,12 +770,6 @@ export const getLayerClickFunction = (
 // meaning they have their own click and hover listeners
 export const layerDefinitions: MainLayerDefinition[] = [
     {
-        id: LayerId.MajorRivers,
-        controllable: true,
-        legend: true,
-        config: getLayerConfig(LayerId.MajorRivers),
-    },
-    {
         id: LayerId.Mainstems,
         controllable: true,
         legend: true,
@@ -779,6 +799,18 @@ export const layerDefinitions: MainLayerDefinition[] = [
                 hoverFunction: getLayerHoverFunction(SubLayerId.MainstemsLarge),
             },
         ],
+    },
+    {
+        id: LayerId.MajorRivers,
+        controllable: true,
+        legend: true,
+        config: getLayerConfig(LayerId.MajorRivers),
+    },
+    {
+        id: LayerId.MainstemsHighlight,
+        controllable: false,
+        legend: false,
+        config: getLayerConfig(LayerId.MainstemsHighlight),
     },
     {
         id: LayerId.HUC2Boundaries,

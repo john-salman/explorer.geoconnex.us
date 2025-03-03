@@ -35,9 +35,9 @@ div#side-panel-control {
     z-index: 1;
 }
 
-/* div#scrollable-side-panel {
-    height: calc(100vh - 50px);
-} */
+div#scrollable-side-panel {
+    height: calc(100vh - 58px);
+}
 
 div#tools {
     z-index: 1;
@@ -83,11 +83,11 @@ a:active {
     }
 }
 
-/* @media (max-width: 1024px) {
+@media (max-width: 1024px) {
     div#scrollable-side-panel {
         height: calc(100vh - 155px);
     }
-} */
+}
 
 .animate-spin {
     animation: spin 1s linear infinite;
