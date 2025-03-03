@@ -221,9 +221,13 @@ export const mainSlice = createSlice({
                     if (action.payload) {
                         // Get an appropriate buffer size based on drainage area
                         const buffer = getMainstemBuffer(action.payload);
+                        // Simplify the line to reduce work getting bounds
+                        const simplifiedLine = turf.simplify(action.payload, {
+                            tolerance: 0.25,
+                        });
                         // Buffer line to better fit feature to screen
                         const bufferedLine = turf.buffer(
-                            action.payload,
+                            simplifiedLine,
                             buffer,
                             {
                                 units: 'kilometers',

@@ -16,7 +16,7 @@ const Collapsible: React.FC<Props> = (props) => {
     };
 
     return (
-        <div className="bg-primary border-b text-white border-gray-300">
+        <div className="bg-primary border-b text-black border-gray-300">
             <button
                 className="w-full flex justify-between items-center p-4 bg-primary font-bold text-lg hover:bg-primary-hover focus:outline-none"
                 onClick={toggleCollapse}

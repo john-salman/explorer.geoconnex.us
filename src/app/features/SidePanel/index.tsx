@@ -19,7 +19,7 @@ export const SidePanel: React.FC<Props> = (props) => {
     const dispatch: AppDispatch = useDispatch();
 
     return (
-        <div className={`w-full mt-1`}>
+        <div className="w-full mt-1">
             <div className=" flex justify-between border-b border-gray-300 shadow-lg">
                 <div className="flex w-[60%]">
                     <button
@@ -27,11 +27,11 @@ export const SidePanel: React.FC<Props> = (props) => {
                         className={`${
                             view === 'map'
                                 ? 'bg-primary -mb-px border-b-transparent'
-                                : 'bg-primary-darker text-gray-200'
+                                : 'bg-primary-darker text-gray-900'
                         } hover:bg-primary 
-                        border-t border-x border-white 
+                        border-t border-x border-gray-300 
                         py-3 px-4 mx-2 
-                        text-white hover:text-white font-bold 
+                        text-black hover:text-black font-bold 
                         rounded-t-lg
                         w-[50%] `}
                     >
@@ -43,12 +43,12 @@ export const SidePanel: React.FC<Props> = (props) => {
                         className={`${
                             view === 'table'
                                 ? 'bg-primary -mb-px border-b-transparent'
-                                : 'bg-primary-darker text-gray-200'
+                                : 'bg-primary-darker text-gray-900'
                         } hover:enabled:bg-primary 
                         disabled:opacity-60
-                        border-t border-x border-white
+                        border-t border-x border-gray-300
                         py-3 px-4
-                      text-white hover::enabled:text-white font-bold 
+                      text-black hover::enabled:text-black font-bold 
                         rounded-t-lg
                         w-[50%]`}
                     >
@@ -57,16 +57,19 @@ export const SidePanel: React.FC<Props> = (props) => {
                 </div>
                 <div
                     id="side-panel-close"
-                    className="mr-1 text-white block lg:hidden"
+                    className="mr-1 text-black block lg:hidden"
                 >
                     <CloseButton
                         handleClick={() => dispatch(setShowSidePanel(false))}
-                        className="text-white hover:text-gray-200 text-xl"
+                        className="text-gray-900 hover:text-gray-200 text-lg"
                         closeIconClassName="w-10 h-10"
                     />
                 </div>
             </div>
-            <div id="scrollable-side-panel" className="overflow-y-auto">
+            <div
+                id="scrollable-side-panel"
+                className="overflow-y-auto h-fit lg:h-full max-h-[80vh] lg:max-h-none"
+            >
                 <Collapsible title="Search">
                     <Search />
                 </Collapsible>
