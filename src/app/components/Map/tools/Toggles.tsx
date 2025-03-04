@@ -85,7 +85,7 @@ export const Toggles: React.FC<Props> = (props) => {
 
     return (
         <>
-            <h6 className="text-lg font-bold mb-1">Layer Visibility</h6>
+            <h6 className="text-lg font-bold mb-1">Layers</h6>
             {renderToggles()}
         </>
     );

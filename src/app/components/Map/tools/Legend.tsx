@@ -57,7 +57,7 @@ export const Legend: React.FC<Props> = (props) => {
                                 {type === LayerType.Fill && (
                                     <Square
                                         key={`legend-entry-${layer.id}-${sublayer.id}`}
-                                        color={color}
+                                        fill={color}
                                     />
                                 )}
                                 {type === LayerType.Symbol &&
@@ -80,6 +80,13 @@ export const Legend: React.FC<Props> = (props) => {
         return layers.map((layer) => {
             const type = getLayerConfig(layer.id)?.type ?? 'none';
             const color = getLayerColor(layer.id);
+
+            if (
+                !layer.legend &&
+                !layer.subLayers?.some((subLayer) => subLayer.legend)
+            ) {
+                return;
+            }
 
             return (
                 <div
@@ -105,7 +112,7 @@ export const Legend: React.FC<Props> = (props) => {
                                     {type === LayerType.Fill && (
                                         <Square
                                             key={`legend-entry-${layer.id}`}
-                                            color={color}
+                                            fill={color}
                                         />
                                     )}
                                     {type === LayerType.Symbol &&

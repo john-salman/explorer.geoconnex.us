@@ -152,6 +152,8 @@ export const getLayerName = (layerId: LayerId | SubLayerId): string => {
             return 'HUC2 Boundaries'; // TODO determine if names are accurate
         case SubLayerId.HUC2BoundaryLabels:
             return 'Labels'; // TODO determine if names are accurate
+        case SubLayerId.HUC2BoundaryFill:
+            return 'HUC2 Boundaries'; // TODO determine if names are accurate
         case LayerId.AssociatedData:
             return 'Associated Data'; // TODO determine if names are accurate
         case SubLayerId.AssociatedDataClusters:
@@ -815,7 +817,7 @@ export const layerDefinitions: MainLayerDefinition[] = [
     {
         id: LayerId.HUC2Boundaries,
         controllable: true,
-        legend: true,
+        legend: false,
         config: getLayerConfig(LayerId.HUC2Boundaries),
         subLayers: [
             {

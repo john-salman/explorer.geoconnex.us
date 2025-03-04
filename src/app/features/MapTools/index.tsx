@@ -18,6 +18,7 @@ import { LayerIcon } from '@/app/assets/icons/LayerIcon';
 import { ControlsIcon } from '@/app/assets/icons/ControlsIcon';
 import { LegendIcon } from '@/app/assets/icons/LegendIcon';
 import Circle from '@/app/assets/icons/Circle';
+import Square from '@/app/assets/icons/Square';
 
 export const MapTools: React.FC = () => {
     const { visibleLayers } = useSelector((state: RootState) => state.main);
@@ -118,23 +119,35 @@ export const MapTools: React.FC = () => {
                             ) => null | LayerSpecification
                         }
                         custom={
-                            <div className="-mt-2">
-                                <span className="font-bold">
-                                    Dataset Clusters
-                                </span>
-                                <span className="flex">
-                                    <Circle color="#51bbd6" />
-                                    &lt; 5
-                                </span>
-                                <span className="flex">
-                                    <Circle color="#f1f075" />
-                                    &gt; 5
-                                </span>
-                                <span className="flex">
-                                    <Circle color="#f28cb1" />
-                                    &gt; 10
-                                </span>
-                            </div>
+                            <>
+                                <div className="-mt-2">
+                                    <div className="flex items-center">
+                                        <div className="mr-1">
+                                            <Square
+                                                fill="#FFF"
+                                                stroke="#000"
+                                                height={8}
+                                            />
+                                        </div>
+                                        {getLayerName(LayerId.HUC2Boundaries)}
+                                    </div>
+                                    <span className="font-bold">
+                                        Dataset Clusters
+                                    </span>
+                                    <span className="flex">
+                                        <Circle color="#51bbd6" />
+                                        &lt; 5
+                                    </span>
+                                    <span className="flex">
+                                        <Circle color="#f1f075" />
+                                        &gt; 5
+                                    </span>
+                                    <span className="flex">
+                                        <Circle color="#f28cb1" />
+                                        &gt; 10
+                                    </span>
+                                </div>
+                            </>
                         }
                     />
                 </Card>

@@ -364,21 +364,21 @@ export const MainMap: React.FC<Props> = (props) => {
         map.setPaintProperty(SubLayerId.MainstemsSmall, 'line-width', [
             'case',
             ['==', ['get', 'id'], selectedMainstemId],
-            6,
+            4,
             MAINSTEM_SMALL_LINE_WIDTH,
         ]);
 
         map.setPaintProperty(SubLayerId.MainstemsMedium, 'line-width', [
             'case',
             ['==', ['get', 'id'], selectedMainstemId],
-            6,
+            4,
             MAINSTEM_MEDIUM_LINE_WIDTH,
         ]);
 
         map.setPaintProperty(SubLayerId.MainstemsLarge, 'line-width', [
             'case',
             ['==', ['get', 'id'], selectedMainstemId],
-            6,
+            4,
             MAINSTEM_LARGE_LINE_WIDTH,
         ]);
 
