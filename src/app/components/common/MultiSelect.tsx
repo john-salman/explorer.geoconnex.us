@@ -12,7 +12,7 @@ const MultiSelect: React.FC<Props> = (props) => {
     const [showOptions, setShowOptions] = useState(false);
 
     return (
-        <div className="w-64 max-w-[19vw] mt-1 mb-1 text-black">
+        <div className="w-100 mt-1 mb-1 text-black">
             <div className="relative">
                 <button
                     className="w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -29,7 +29,7 @@ const MultiSelect: React.FC<Props> = (props) => {
                     }`}
                 >
                     <ul
-                        className="max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+                        className="rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
                         role="listbox"
                         aria-labelledby="listbox-label"
                     >

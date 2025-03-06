@@ -1,6 +1,6 @@
 'use client';
 import Map from '@/app/components/Map';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     layerDefinitions,
     sourceConfigs,
@@ -11,6 +11,12 @@ import {
     SourceId,
     BASEMAP,
     CLUSTER_TRANSITION_ZOOM,
+    MAINSTEMS_SELECTED_COLOR,
+    MAINSTEMS_SEARCH_COLOR,
+    MAINSTEM_OPACITY_EXPRESSION,
+    MAINSTEM_SMALL_LINE_WIDTH,
+    MAINSTEM_MEDIUM_LINE_WIDTH,
+    MAINSTEM_LARGE_LINE_WIDTH,
 } from '@/app/features/MainMap/config';
 import { useMap } from '@/app/contexts/MapContexts';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,17 +26,17 @@ import {
     GeoJSONSource,
     LngLatBoundsLike,
     MapMouseEvent,
-    NavigationControl,
-    ScaleControl,
 } from 'mapbox-gl';
 import { extractLatLng } from '@/lib/state/utils';
 import {
     fetchDatasets,
+    reset,
     setLayerVisibility,
     setSelectedData,
     setSelectedMainstemBBOX,
+    setSelectedMainstemId,
 } from '@/lib/state/main/slice';
-import { spiderfyClusters, zoomToMainStem } from '@/app/features/MainMap/utils';
+import { spiderfyClusters } from '@/app/features/MainMap/utils';
 import * as turf from '@turf/turf';
 import { FeatureCollection, Geometry } from 'geojson';
 import { Dataset } from '@/app/types';
@@ -44,7 +50,7 @@ type Props = {
 export const MainMap: React.FC<Props> = (props) => {
     const { accessToken } = props;
 
-    const { map, persistentPopup } = useMap(MAP_ID);
+    const { map, persistentPopup, hoverPopup } = useMap(MAP_ID);
     const dispatch: AppDispatch = useDispatch();
 
     const {
@@ -52,17 +58,19 @@ export const MainMap: React.FC<Props> = (props) => {
         filteredDatasets,
         visibleLayers,
         hoverId,
+        selectedMainstemId,
         selectedMainstemBBOX,
     } = useSelector((state: RootState) => state.main);
 
     const [reloadFlag, setReloadFlag] = useState(0);
 
+    const previousClusterIds = useRef('');
+
     useEffect(() => {
         if (!map) {
             return;
         }
-
-        const onZoom = () => {
+        const handleInitialZoom = () => {
             const zoom = map.getZoom();
             if (zoom >= 5) {
                 dispatch(
@@ -75,19 +83,28 @@ export const MainMap: React.FC<Props> = (props) => {
                 );
 
                 // Remove this listener after
-                map.off('zoom', onZoom);
+                map.off('zoom', handleInitialZoom);
             }
         };
 
-        map.on('zoom', onZoom);
-
-        map.on('zoom', () => {
+        const createSpiderifiedClusters = () => {
             const zoom = map.getZoom();
             if (zoom >= CLUSTER_TRANSITION_ZOOM) {
                 const features = map.queryRenderedFeatures({
                     layers: [SubLayerId.AssociatedDataClusters],
                 });
-                if (features.length) {
+                // Get unique ids
+                const uniqueIds = new Set(
+                    features.map((feature) => feature.properties!.cluster_id)
+                );
+                // Sort and convert to string
+                const clusterIds = Array.from(uniqueIds).sort().join();
+                // Check ids to prevent repeated spiderfy
+                if (
+                    features.length &&
+                    clusterIds !== previousClusterIds.current
+                ) {
+                    previousClusterIds.current = clusterIds;
                     const source = map.getSource(
                         SourceId.AssociatedData
                     ) as GeoJSONSource;
@@ -95,30 +112,20 @@ export const MainMap: React.FC<Props> = (props) => {
                     spiderfyClusters(map, source, features);
                 }
             }
-        });
+        };
 
-        map.on('drag', () => {
-            const zoom = map.getZoom();
-            if (zoom >= CLUSTER_TRANSITION_ZOOM) {
-                const features = map.queryRenderedFeatures({
-                    layers: [SubLayerId.AssociatedDataClusters],
-                });
+        map.on('zoom', handleInitialZoom);
 
-                if (features.length) {
-                    const source = map.getSource(
-                        SourceId.AssociatedData
-                    ) as GeoJSONSource;
-                    spiderfyClusters(map, source, features);
-                }
-            }
-        });
+        map.on('zoom', createSpiderifiedClusters);
 
-        map.loadImage('marker.png', (error, image) => {
+        map.on('drag', createSpiderifiedClusters);
+
+        map.loadImage('dot-marker.png', (error, image) => {
             if (error) throw error;
             if (!image) {
-                throw new Error('Image not found: marker.png');
+                throw new Error('Image not found: dot-marker.png');
             }
-            map.addImage('observation-point', image, { sdf: true });
+            map.addImage('observation-point', image);
         });
 
         map.on('error', function (e) {
@@ -145,12 +152,32 @@ export const MainMap: React.FC<Props> = (props) => {
                     const feature = features[0];
                     if (feature.properties) {
                         const id = feature.properties.id;
+
+                        dispatch(setSelectedMainstemId(id));
                         dispatch(fetchDatasets(id));
-                        zoomToMainStem(map, id);
                     }
                 }
             }
         );
+
+        map.on('click', (e) => {
+            const features = map.queryRenderedFeatures(e.point, {
+                layers: [
+                    SubLayerId.MainstemsSmall,
+                    SubLayerId.MainstemsMedium,
+                    SubLayerId.MainstemsLarge,
+                    SubLayerId.AssociatedDataClusters,
+                    SubLayerId.AssociatedDataClusterCount,
+                    SubLayerId.AssociatedDataUnclustered,
+                    LayerId.SpiderifyPoints,
+                ],
+            });
+
+            if (!features.length) {
+                dispatch(setSelectedMainstemId(null));
+                dispatch(reset());
+            }
+        });
 
         // Allow the user to zoom into a boundary once from page load
         const HUC2BoundaryClickListener = (e: MapMouseEvent) => {
@@ -173,19 +200,19 @@ export const MainMap: React.FC<Props> = (props) => {
         map.on('style.load', () => {
             setReloadFlag(Math.random());
             if (!map.hasImage('observation-point')) {
-                map.loadImage('marker.png', (error, image) => {
+                map.loadImage('dot-marker.png', (error, image) => {
                     if (error) throw error;
                     if (!image) {
-                        throw new Error('Image not found: marker.png');
+                        throw new Error('Image not found: dot-marker.png');
                     }
-                    map.addImage('observation-point', image, { sdf: true });
+                    map.addImage('observation-point', image);
                 });
             }
         });
     }, [map]);
 
     useEffect(() => {
-        if (!map || !persistentPopup) {
+        if (!map || !persistentPopup || !hoverPopup) {
             return;
         }
 
@@ -195,7 +222,8 @@ export const MainMap: React.FC<Props> = (props) => {
                 if (persistentPopup.isOpen()) {
                     persistentPopup.remove();
                 }
-                const itemId = feature.properties.url;
+                hoverPopup.remove();
+                const itemId = feature.properties.distributionURL;
                 const latLng = extractLatLng(feature.properties.wkt);
                 const html = `<span style="color: black;" data-observationId="${itemId}"> 
                 <h6 style="font-weight:bold;">${
@@ -224,60 +252,151 @@ export const MainMap: React.FC<Props> = (props) => {
                 dispatch(setSelectedData(feature.properties as Dataset));
             }
         });
+
+        map.on('zoom', () => {
+            const zoom = map.getZoom();
+            if (zoom < CLUSTER_TRANSITION_ZOOM) {
+                persistentPopup.remove();
+            }
+        });
     }, [map]);
 
     useEffect(() => {
         if (!map) {
             return;
         }
-
-        const opacityExpression: ExpressionSpecification = [
-            'case',
-            ['in', ['get', 'id'], ['literal', searchResultIds]],
-            1,
-            0.3, // Not In List
-        ];
+        // If actively searching
+        if (searchResultIds.length) {
+            const opacityExpression: ExpressionSpecification = [
+                'case',
+                ['in', ['get', 'id'], ['literal', searchResultIds]],
+                1,
+                0.3, // Not In List
+            ];
+            map.setPaintProperty(
+                SubLayerId.MainstemsSmall,
+                'line-opacity',
+                opacityExpression
+            );
+            map.setPaintProperty(
+                SubLayerId.MainstemsMedium,
+                'line-opacity',
+                opacityExpression
+            );
+            map.setPaintProperty(
+                SubLayerId.MainstemsLarge,
+                'line-opacity',
+                opacityExpression
+            );
+            // Otherwise reset to original expression
+        } else {
+            map.setPaintProperty(
+                SubLayerId.MainstemsSmall,
+                'line-opacity',
+                MAINSTEM_OPACITY_EXPRESSION
+            );
+            map.setPaintProperty(
+                SubLayerId.MainstemsMedium,
+                'line-opacity',
+                MAINSTEM_OPACITY_EXPRESSION
+            );
+            map.setPaintProperty(
+                SubLayerId.MainstemsLarge,
+                'line-opacity',
+                MAINSTEM_OPACITY_EXPRESSION
+            );
+        }
 
         map.setPaintProperty(SubLayerId.MainstemsSmall, 'line-color', [
             'case',
             ['==', ['get', 'id'], String(hoverId)],
-            '#04BBDE',
+            MAINSTEMS_SELECTED_COLOR,
+            ['==', ['get', 'id'], selectedMainstemId],
+            MAINSTEMS_SELECTED_COLOR,
             ['in', ['get', 'id'], ['literal', searchResultIds]],
-            '#FAC60F',
+            MAINSTEMS_SEARCH_COLOR,
             getLayerColor(SubLayerId.MainstemsSmall), // Not In List
         ]);
-        map.setPaintProperty(
-            SubLayerId.MainstemsSmall,
-            'line-opacity',
-            opacityExpression
-        );
+
         map.setPaintProperty(SubLayerId.MainstemsMedium, 'line-color', [
             'case',
             ['==', ['get', 'id'], String(hoverId)],
-            '#04BBDE',
+            MAINSTEMS_SELECTED_COLOR,
+            ['==', ['get', 'id'], selectedMainstemId],
+            MAINSTEMS_SELECTED_COLOR,
             ['in', ['get', 'id'], ['literal', searchResultIds]],
-            '#FAC60F',
+            MAINSTEMS_SEARCH_COLOR,
             getLayerColor(SubLayerId.MainstemsMedium), // Not In List
         ]);
-        map.setPaintProperty(
-            SubLayerId.MainstemsMedium,
-            'line-opacity',
-            opacityExpression
-        );
+
         map.setPaintProperty(SubLayerId.MainstemsLarge, 'line-color', [
             'case',
             ['==', ['get', 'id'], String(hoverId)],
-            '#04BBDE',
+            MAINSTEMS_SELECTED_COLOR,
+            ['==', ['get', 'id'], selectedMainstemId],
+            MAINSTEMS_SELECTED_COLOR,
             ['in', ['get', 'id'], ['literal', searchResultIds]],
-            '#FAC60F',
+            MAINSTEMS_SEARCH_COLOR,
             getLayerColor(SubLayerId.MainstemsLarge), // Not In List
         ]);
-        map.setPaintProperty(
-            SubLayerId.MainstemsLarge,
-            'line-opacity',
-            opacityExpression
-        );
-    }, [searchResultIds, hoverId]);
+
+        map.setPaintProperty(SubLayerId.MainstemsSmall, 'line-blur', [
+            'case',
+            ['==', ['get', 'id'], selectedMainstemId],
+            1,
+            0,
+        ]);
+
+        map.setPaintProperty(SubLayerId.MainstemsMedium, 'line-blur', [
+            'case',
+            ['==', ['get', 'id'], selectedMainstemId],
+            1,
+            0,
+        ]);
+
+        map.setPaintProperty(SubLayerId.MainstemsLarge, 'line-blur', [
+            'case',
+            ['==', ['get', 'id'], selectedMainstemId],
+            1,
+            0,
+        ]);
+
+        map.setPaintProperty(SubLayerId.MainstemsSmall, 'line-width', [
+            'case',
+            ['==', ['get', 'id'], selectedMainstemId],
+            4,
+            MAINSTEM_SMALL_LINE_WIDTH,
+        ]);
+
+        map.setPaintProperty(SubLayerId.MainstemsMedium, 'line-width', [
+            'case',
+            ['==', ['get', 'id'], selectedMainstemId],
+            4,
+            MAINSTEM_MEDIUM_LINE_WIDTH,
+        ]);
+
+        map.setPaintProperty(SubLayerId.MainstemsLarge, 'line-width', [
+            'case',
+            ['==', ['get', 'id'], selectedMainstemId],
+            4,
+            MAINSTEM_LARGE_LINE_WIDTH,
+        ]);
+
+        // Allow selected feature in highlight layer
+        if (selectedMainstemId) {
+            map.setFilter(LayerId.MainstemsHighlight, [
+                '==',
+                ['get', 'id'],
+                selectedMainstemId,
+            ]);
+        } else {
+            map.setFilter(LayerId.MainstemsHighlight, [
+                '==',
+                ['get', 'id'],
+                null,
+            ]);
+        }
+    }, [searchResultIds, selectedMainstemId, hoverId]);
 
     useEffect(() => {
         if (!map || !filteredDatasets) {

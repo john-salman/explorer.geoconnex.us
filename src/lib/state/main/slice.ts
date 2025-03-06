@@ -1,17 +1,39 @@
 'use client';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { defaultGeoJson, transformDatasets } from '../utils';
-import { FeatureCollection, Geometry } from 'geojson';
+import {
+    createSummary,
+    getMainstemBuffer,
+    transformDatasets,
+} from '@/lib/state/utils';
+import {
+    Feature,
+    FeatureCollection,
+    GeoJsonProperties,
+    Geometry,
+} from 'geojson';
 import { LayerId, SubLayerId } from '@/app/features/MainMap/config';
 import { Dataset } from '@/app/types';
-import { GeoJSONFeature, LngLatBoundsLike } from 'mapbox-gl';
+import { LngLatBoundsLike } from 'mapbox-gl';
 import * as turf from '@turf/turf';
+import { defaultGeoJson } from '@/lib/state/consts';
+
+export type Summary = {
+    id: number;
+    name: string;
+    length: number;
+    total: number;
+    variables: string;
+    types: string;
+    techniques: string;
+};
 
 type InitialState = {
-    selectedMainstemId: number | null;
+    showSidePanel: boolean;
+    selectedMainstemId: string | null;
     selectedMainstemBBOX: LngLatBoundsLike | null;
     hoverId: number | null;
     selectedData: Dataset | null;
+    selectedSummary: Summary | null;
     searchResultIds: string[];
     status: string;
     error: string | null;
@@ -41,10 +63,12 @@ type InitialState = {
 };
 
 const initialState: InitialState = {
+    showSidePanel: false,
     selectedMainstemId: null,
     selectedMainstemBBOX: null,
     hoverId: null,
     selectedData: null,
+    selectedSummary: null,
     searchResultIds: [],
     status: 'idle', // Additional state to track loading status
     error: null,
@@ -98,6 +122,12 @@ export const mainSlice = createSlice({
     name: 'main',
     initialState: initialState,
     reducers: {
+        setShowSidePanel: (
+            state,
+            action: PayloadAction<InitialState['showSidePanel']>
+        ) => {
+            state.showSidePanel = action.payload;
+        },
         setSearchResultIds: (
             state,
             action: PayloadAction<InitialState['searchResultIds']>
@@ -161,36 +191,25 @@ export const mainSlice = createSlice({
 
                 // If filter exists apply it
 
-                // Check type
-                const isTypeSelected =
-                    !newFilter.selectedTypes ||
-                    newFilter.selectedTypes.length === 0 ||
-                    newFilter.selectedTypes.includes(type);
                 // Check variable measured
                 const isVariableSelected =
-                    !newFilter.selectedVariables ||
-                    newFilter.selectedVariables.length === 0 ||
+                    newFilter.selectedVariables === undefined ||
                     newFilter.selectedVariables.includes(
                         variableMeasured.split(' / ')[0]
                     );
 
                 // Check start of temporal coverages
                 const isStartDateValid =
-                    !newFilter.startTemporalCoverage ||
+                    newFilter.startTemporalCoverage === undefined ||
                     new Date(newFilter.startTemporalCoverage) <=
                         new Date(startDate);
                 // Check end of temporal coverages
                 const isEndDateValid =
-                    !newFilter.endTemporalCoverage ||
+                    newFilter.endTemporalCoverage === undefined ||
                     new Date(newFilter.endTemporalCoverage) >=
                         new Date(endDate);
 
-                return (
-                    isTypeSelected &&
-                    isVariableSelected &&
-                    isStartDateValid &&
-                    isEndDateValid
-                );
+                return isVariableSelected && isStartDateValid && isEndDateValid;
             });
 
             state.filteredDatasets = {
@@ -210,6 +229,19 @@ export const mainSlice = createSlice({
         ) => {
             state.selectedMainstemBBOX = action.payload;
         },
+        reset: (state) => {
+            state.selectedMainstemId = null;
+            state.selectedMainstemBBOX = null;
+            state.datasets = defaultGeoJson as FeatureCollection<
+                Geometry,
+                Dataset
+            >;
+            state.filteredDatasets = defaultGeoJson as FeatureCollection<
+                Geometry,
+                Dataset
+            >;
+            state.selectedSummary = null;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -219,16 +251,50 @@ export const mainSlice = createSlice({
             })
             .addCase(
                 fetchDatasets.fulfilled,
-                (state, action: PayloadAction<GeoJSONFeature>) => {
+                (
+                    state,
+                    action: PayloadAction<
+                        Feature<
+                            Geometry,
+                            GeoJsonProperties & { datasets: Dataset[] }
+                        >
+                    >
+                ) => {
                     state.status = 'succeeded';
                     if (action.payload) {
+                        // Create a summary for this mainstem
+                        const id = action.payload.id;
+                        const summary = createSummary(
+                            Number(id),
+                            action.payload
+                        );
+                        state.selectedSummary = summary;
+
+                        // Get an appropriate buffer size based on drainage area
+                        const buffer = getMainstemBuffer(action.payload);
+                        // Simplify the line to reduce work getting bounds
+                        const simplifiedLine = turf.simplify(action.payload, {
+                            tolerance: 0.25,
+                        });
+                        // Buffer line to better fit feature to screen
+                        const bufferedLine = turf.buffer(
+                            simplifiedLine,
+                            buffer,
+                            {
+                                units: 'kilometers',
+                            }
+                        );
+                        if (bufferedLine) {
+                            const bbox = turf.bbox(
+                                bufferedLine
+                            ) as LngLatBoundsLike;
+
+                            state.selectedMainstemBBOX = bbox;
+                        }
+                        // Transform datasets into a new feature collection
                         const datasets = transformDatasets(action.payload);
                         state.datasets = datasets;
                         state.filteredDatasets = datasets;
-                        const bbox = turf.bbox(
-                            action.payload
-                        ) as LngLatBoundsLike;
-                        state.selectedMainstemBBOX = bbox;
                     }
                     return;
                 }
@@ -241,6 +307,7 @@ export const mainSlice = createSlice({
 });
 
 export const {
+    setShowSidePanel,
     setSearchResultIds,
     setSelectedMainstemId,
     setHoverId,
@@ -251,6 +318,7 @@ export const {
     setFilter,
     setView,
     setSelectedMainstemBBOX,
+    reset,
 } = mainSlice.actions;
 
 export default mainSlice.reducer;

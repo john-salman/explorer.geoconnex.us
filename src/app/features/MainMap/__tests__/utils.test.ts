@@ -8,7 +8,7 @@ describe('MainMap: utils', () => {
     test('calculateSpiderfiedPositions: should return correct positions for 1 point', () => {
         const result = calculateSpiderfiedPositions(1);
 
-        expect(result).toEqual([[28.366218546322624, -95.89242746631385]]);
+        expect(result).toEqual([[-41.61468365471424, 90.92974268256818]]);
     });
 
     test('calculateSpiderfiedPositions: should return correct positions for 10 points', () => {
@@ -23,7 +23,7 @@ describe('MainMap: utils', () => {
 
     test('calculateSpiderfiedPositionsCircle: should return correct positions for 1 point', () => {
         const result = calculateSpiderfiedPositionsCircle(1);
-        expect(result).toEqual([[350, 0]]);
+        expect(result).toEqual([[75, 0]]);
     });
 
     test('calculateSpiderfiedPositionsCircle: should return correct positions for 10 points', () => {
@@ -38,7 +38,7 @@ describe('MainMap: utils', () => {
 
     test('calculateSpiderfiedPositionsConcentricCircle: should return correct positions for 1 point', () => {
         const result = calculateSpiderfiedPositionsConcentricCircle(1);
-        expect(result).toEqual([[300, 0]]);
+        expect(result).toEqual([[75, 0]]);
     });
 
     test('calculateSpiderfiedPositionsConcentricCircle: should return correct positions for 10 points', () => {

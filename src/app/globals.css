@@ -5,6 +5,8 @@
 :root {
     --background: #ffffff;
     --foreground: #171717;
+    --primary: theme('colors.primary.DEFAULT');
+    --secondary: theme('colors.secondary.DEFAULT');
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,17 +23,20 @@ body {
 }
 
 #map-container-main {
-    width: 100vw;
+    width: 100%;
     height: 100vh;
 }
 
-div#sidePanel {
+div#side-panel {
     z-index: 1;
 }
 
-div#scrollable-sidepanel {
-    max-height: calc(100vh - 116px);
-    overflow-y: auto;
+div#side-panel-control {
+    z-index: 1;
+}
+
+div#scrollable-side-panel {
+    height: calc(100vh - 58px);
 }
 
 div#tools {
@@ -44,13 +49,68 @@ div#tools {
     gap: 1rem;
 }
 
-@media (min-width: 600px) {
+button.mapboxgl-popup-close-button {
+    font-size: x-large;
+    right: 3px;
+}
+
+input[type='checkbox'] {
+    accent-color: --secondary;
+}
+
+a {
+    color: blue; /* Default link color */
+    text-decoration: underline; /* Underline the link */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+a:visited {
+    color: purple; /* Color for visited links */
+}
+
+a:hover {
+    color: darkblue; /* Color when hovering over the link */
+    text-decoration: underline; /* Keep underline on hover */
+}
+
+a:active {
+    color: red; /* Color when the link is active (clicked) */
+}
+
+@media (min-width: 1450px) {
     #date-range-columns {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-.mapboxgl-popup-close-button {
-    font-size: x-large;
-    right: 3px;
+@media (max-width: 1024px) {
+    div#scrollable-side-panel {
+        height: calc(100vh - 155px);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+.animate-linear {
+    animation: linear 2s linear infinite;
+}
+
+@keyframes linear {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }

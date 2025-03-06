@@ -44,10 +44,12 @@ export type CustomListenerFunction = (
 export type LayerDefinition = {
     id: string;
     controllable: boolean;
+    legend: boolean;
     config: LayerSpecification | null;
     hoverFunction?: CustomListenerFunction;
     customHoverExitFunction?: CustomListenerFunction;
     clickFunction?: CustomListenerFunction;
+    mouseMoveFunction?: CustomListenerFunction;
 };
 
 export type MainLayerDefinition = LayerDefinition & {
@@ -95,3 +97,10 @@ export type BasemapStyles =
 export type Basemaps = {
     [key in BasemapId]: BasemapStyles;
 };
+
+export enum LayerType {
+    Line = 'line',
+    Symbol = 'symbol',
+    Circle = 'circle',
+    Fill = 'fill',
+}

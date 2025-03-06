@@ -9,7 +9,7 @@ const Table: React.FC = () => {
 
     // TODO: ensure property order and call getHeaderValue
     return (
-        <div className="h-[100vh] overflow-x-auto f-full rounded-lg">
+        <div className="h-[100vh] overflow-x-auto f-full bg-white">
             <table className="min-w-full bg-white border border-gray-200 text-black text-sm">
                 <thead>
                     <tr>
@@ -45,13 +45,12 @@ const Table: React.FC = () => {
                     {filteredDatasets.features.map((feature, index) => (
                         <tr
                             key={index}
-                            className={`cursor-pointer ${
+                            className={`${
                                 selectedData?.variableMeasured ===
                                     feature.properties.variableMeasured &&
                                 selectedData?.distributionName ===
-                                    feature.properties.distributionName
-                                    ? 'bg-blue-100'
-                                    : 'hover:bg-gray-100'
+                                    feature.properties.distributionName &&
+                                'bg-blue-100'
                             }`}
                         >
                             <td className="py-2 px-4 border-b">
