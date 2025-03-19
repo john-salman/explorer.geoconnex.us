@@ -1,5 +1,10 @@
 'use client';
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {
+    createAsyncThunk,
+    createSelector,
+    createSlice,
+    PayloadAction,
+} from '@reduxjs/toolkit';
 import {
     createSummary,
     getMainstemBuffer,
@@ -11,6 +16,7 @@ import { Dataset, MainstemData } from '@/app/types';
 import { LngLatBoundsLike } from 'mapbox-gl';
 import * as turf from '@turf/turf';
 import { defaultGeoJson } from '@/lib/state/consts';
+import { RootState } from '@/lib/state/store';
 
 export type Summary = {
     id: number;
@@ -35,7 +41,6 @@ type InitialState = {
     status: string;
     error: string | null;
     datasets: FeatureCollection<Geometry, Dataset>;
-    filteredDatasets: FeatureCollection<Geometry, Dataset>;
     view: 'map' | 'table';
     visibleLayers: {
         [LayerId.MajorRivers]: boolean;
@@ -60,7 +65,7 @@ type InitialState = {
 };
 
 const initialState: InitialState = {
-    showSidePanel: false,
+    showSidePanel: true,
     showHelp: false,
     showResults: false,
     selectedMainstemId: null,
@@ -72,7 +77,6 @@ const initialState: InitialState = {
     status: 'idle', // Additional state to track loading status
     error: null,
     datasets: defaultGeoJson as FeatureCollection<Geometry, Dataset>,
-    filteredDatasets: defaultGeoJson as FeatureCollection<Geometry, Dataset>,
     view: 'map',
     visibleLayers: {
         [LayerId.MajorRivers]: true,
@@ -109,6 +113,56 @@ export const fetchDatasets = createAsyncThunk<
     return data;
 });
 
+const selectDatasets = (state: RootState) => state.main.datasets;
+const selectFilter = (state: RootState) => state.main.filter;
+// Memoized selector to prevent false rerender requests
+export const getDatasets = createSelector(
+    [selectDatasets, selectFilter],
+    (datasets, filter): FeatureCollection<Geometry, Dataset> => {
+        if (
+            !filter.selectedVariables &&
+            !filter.startTemporalCoverage &&
+            !filter.endTemporalCoverage
+        ) {
+            return datasets;
+        }
+
+        // Apply filter automatically to the main datasets obj
+        const features = datasets.features.filter((feature) => {
+            const { variableMeasured, temporalCoverage } = feature.properties;
+            const [startTemporal, endTemporal] = temporalCoverage.split('/');
+
+            const startDate = new Date(startTemporal);
+            const endDate = new Date(endTemporal);
+
+            // If filter exists apply it
+
+            // Check variable measured
+            const isVariableSelected =
+                filter.selectedVariables === undefined ||
+                filter.selectedVariables.includes(
+                    variableMeasured.split(' / ')[0]
+                );
+
+            // Check start of temporal coverages
+            const isStartDateValid =
+                filter.startTemporalCoverage === undefined ||
+                new Date(filter.startTemporalCoverage) <= new Date(startDate);
+            // Check end of temporal coverages
+            const isEndDateValid =
+                filter.endTemporalCoverage === undefined ||
+                new Date(filter.endTemporalCoverage) >= new Date(endDate);
+
+            return isVariableSelected && isStartDateValid && isEndDateValid;
+        });
+
+        return {
+            type: 'FeatureCollection',
+            features: features,
+        };
+    }
+);
+
 export const mainSlice = createSlice({
     name: 'main',
     initialState: initialState,
@@ -142,13 +196,6 @@ export const mainSlice = createSlice({
             action: PayloadAction<InitialState['datasets']>
         ) => {
             state.datasets = action.payload;
-            state.filteredDatasets = action.payload;
-        },
-        setFilteredDatasets: (
-            state,
-            action: PayloadAction<InitialState['filteredDatasets']>
-        ) => {
-            state.filteredDatasets = action.payload;
         },
         setSelectedMainstemId: (
             state,
@@ -180,45 +227,8 @@ export const mainSlice = createSlice({
                 ...state.filter,
                 ...action.payload,
             };
+
             state.filter = newFilter;
-
-            // Apply filter automatically to the main datasets obj
-            const features = state.datasets.features.filter((feature) => {
-                const { variableMeasured, temporalCoverage } =
-                    feature.properties;
-                const [startTemporal, endTemporal] =
-                    temporalCoverage.split('/');
-
-                const startDate = new Date(startTemporal);
-                const endDate = new Date(endTemporal);
-
-                // If filter exists apply it
-
-                // Check variable measured
-                const isVariableSelected =
-                    newFilter.selectedVariables === undefined ||
-                    newFilter.selectedVariables.includes(
-                        variableMeasured.split(' / ')[0]
-                    );
-
-                // Check start of temporal coverages
-                const isStartDateValid =
-                    newFilter.startTemporalCoverage === undefined ||
-                    new Date(newFilter.startTemporalCoverage) <=
-                        new Date(startDate);
-                // Check end of temporal coverages
-                const isEndDateValid =
-                    newFilter.endTemporalCoverage === undefined ||
-                    new Date(newFilter.endTemporalCoverage) >=
-                        new Date(endDate);
-
-                return isVariableSelected && isStartDateValid && isEndDateValid;
-            });
-
-            state.filteredDatasets = {
-                type: 'FeatureCollection',
-                features: features,
-            };
         },
         setHoverId: (state, action: PayloadAction<InitialState['hoverId']>) => {
             state.hoverId = action.payload;
@@ -236,10 +246,6 @@ export const mainSlice = createSlice({
             state.selectedMainstemId = null;
             state.selectedMainstemBBOX = null;
             state.datasets = defaultGeoJson as FeatureCollection<
-                Geometry,
-                Dataset
-            >;
-            state.filteredDatasets = defaultGeoJson as FeatureCollection<
                 Geometry,
                 Dataset
             >;
@@ -280,7 +286,6 @@ export const mainSlice = createSlice({
                     // Transform datasets into a new feature collection
                     const datasets = transformDatasets(action.payload);
                     state.datasets = datasets;
-                    state.filteredDatasets = datasets;
                     state.showResults = false;
                 }
                 return;
@@ -300,7 +305,6 @@ export const {
     setSelectedMainstemId,
     setHoverId,
     setDatasets,
-    setFilteredDatasets,
     setLayerVisibility,
     setSelectedData,
     setFilter,
