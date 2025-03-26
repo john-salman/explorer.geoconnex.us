@@ -113,9 +113,30 @@ const initialState: InitialState = {
     },
 };
 
+type FetchDatasetsSuccess = Feature<
+    Geometry,
+    Omit<MainstemData, 'id'> & { datasets: Dataset[] }
+>;
+type FetchDatasetsNotFound = {
+    code: string;
+    type: string;
+    description: string;
+};
+
+function isFetchDatasetsNotFound(
+    payload: FetchDatasetsSuccess | FetchDatasetsNotFound
+): payload is FetchDatasetsNotFound {
+    return Boolean(
+        payload &&
+            (payload as FetchDatasetsNotFound).code &&
+            typeof (payload as FetchDatasetsNotFound).code === 'string' &&
+            (payload as FetchDatasetsNotFound).code === 'NotFound'
+    );
+}
+
 // Good candidate for caching
 export const fetchDatasets = createAsyncThunk<
-    Feature<Geometry, Omit<MainstemData, 'id'> & { datasets: Dataset[] }>,
+    FetchDatasetsSuccess | FetchDatasetsNotFound,
     string
 >('main/fetchDatasets', async (id: string) => {
     const response = await fetch(
@@ -140,14 +161,6 @@ const selectFilter = (state: RootState) => state.main.filter;
 export const getFilteredDatasets = createSelector(
     [selectDatasets, selectFilter],
     (datasets, filter): FeatureCollection<Point, Dataset> => {
-        if (
-            !filter.variables &&
-            !filter.startTemporalCoverage &&
-            !filter.endTemporalCoverage
-        ) {
-            return datasets;
-        }
-
         // Apply filter automatically to the main datasets obj
         const features = datasets.features.filter((feature) => {
             const {
@@ -388,7 +401,11 @@ export const mainSlice = createSlice({
             })
             .addCase(fetchDatasets.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                if (action.payload) {
+
+                if (
+                    action.payload &&
+                    !isFetchDatasetsNotFound(action.payload)
+                ) {
                     // Create a summary for this mainstem
                     const id = action.payload.id;
 
