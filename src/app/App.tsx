@@ -18,6 +18,7 @@ import { HelpModal } from '@/app/features/HelpModal';
 import { LoadingBar } from '@/app/features/Loading';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import { About } from './features/About';
 
 type Props = {
     accessToken: string;
@@ -67,6 +68,15 @@ export const App: React.FC<Props> = (props) => {
         }
     }, [map]);
 
+    useEffect(() => {
+        if (!map) {
+            return;
+        }
+        if (view === 'map') {
+            map.resize();
+        }
+    }, [view]);
+
     const handleSidePanelControlClick = () => {
         dispatch(setShowSidePanel(true));
     };
@@ -75,14 +85,7 @@ export const App: React.FC<Props> = (props) => {
         <>
             <HelpModal />
             <div className="flex">
-                <div
-                    id="side-panel-control"
-                    className={`fixed left-2 ${
-                        view === 'table'
-                            ? 'top-[unset] bottom-6 lg:top-3 lg:bottom-[unset]'
-                            : 'top-3'
-                    }`}
-                >
+                <div id="side-panel-control" className={`fixed left-2 top-3 `}>
                     {!showSidePanel && (
                         <IconButton
                             onClick={() => handleSidePanelControlClick()}
@@ -94,9 +97,9 @@ export const App: React.FC<Props> = (props) => {
                 <div
                     id="side-panel"
                     className={`
-                     w-[90vw] lg:w-[45vw] xl:w-[30vw] 2xl:w-[20vw] 
+                    w-full lg:w-[45vw] xl:w-[30vw] 2xl:w-[20vw] 
                      min-w-[300px] sm:min-w-[400px]
-                     max-w-[300px] sm:max-w-[400px]
+                    md:max-w-[400px]
                      flex overflow-hidden bg-primary
                      m-2 lg:m-0
                      border lg:border-l-0 lg:border-t-0 lg:border-b-0
@@ -130,6 +133,14 @@ export const App: React.FC<Props> = (props) => {
                             <Table />
                         </>
                     )}
+                </div>
+                <div
+                    id="about"
+                    className={`overflow-hidden absolute lg:relative ${
+                        view === 'about' ? 'block' : 'hidden'
+                    } w-full`}
+                >
+                    <About />
                 </div>
             </div>
         </>
