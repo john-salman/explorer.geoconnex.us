@@ -37,7 +37,7 @@ const Pagination: React.FC<Props> = (props) => {
                     {' ⏮ '}
                 </button>
                 <button
-                    className="border rounded p-1 text-black disabled:opacity-70"
+                    className="border rounded p-1 text-black text-base disabled:opacity-70"
                     onClick={() => paginationFunctions.previousPage()}
                     disabled={!paginationFunctions.getCanPreviousPage()}
                     title="Go to previous page"
@@ -46,7 +46,7 @@ const Pagination: React.FC<Props> = (props) => {
                 </button>
                 <button
                     data-testid="next-button"
-                    className="border rounded p-1 text-black disabled:opacity-70"
+                    className="border rounded p-1 text-black text-base disabled:opacity-70"
                     onClick={() => paginationFunctions.nextPage()}
                     disabled={!paginationFunctions.getCanNextPage()}
                     title="Go to next page"
